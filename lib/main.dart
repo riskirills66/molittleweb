@@ -35,6 +35,9 @@ class MyHomePage extends StatefulWidget {
 class _MyHomePageState extends State<MyHomePage> {
   final TextEditingController _phoneController = TextEditingController();
   List<dynamic> _packages = [];
+  List<dynamic> _filteredPackages = [];
+  List<String> _subCategories = [];
+  String? _selectedSubCategory;
   bool _isLoading = false;
   String _errorMessage = '';
   
@@ -49,6 +52,9 @@ class _MyHomePageState extends State<MyHomePage> {
       _isLoading = true;
       _errorMessage = '';
       _packages = [];
+      _filteredPackages = [];
+      _subCategories = [];
+      _selectedSubCategory = null;
     });
     
     try {
@@ -75,8 +81,26 @@ class _MyHomePageState extends State<MyHomePage> {
       print('Response data: ${response.data}');
       
       if (response.statusCode == 200) {
+        // Extract unique sub-categories
+        final Set<String> uniqueSubCategories = {};
+        for (var package in response.data) {
+          if (package['product_sub_category'] != null) {
+            uniqueSubCategories.add(package['product_sub_category'].toString());
+          }
+        }
+        
         setState(() {
           _packages = response.data;
+          _subCategories = uniqueSubCategories.toList();
+          
+          // Set default selected category if available
+          if (_subCategories.isNotEmpty) {
+            _selectedSubCategory = _subCategories.first;
+            _filterPackages(_selectedSubCategory!);
+          } else {
+            _filteredPackages = _packages;
+          }
+          
           _isLoading = false;
         });
       } else {
@@ -92,6 +116,14 @@ class _MyHomePageState extends State<MyHomePage> {
       });
       print('Exception details: $e');
     }
+  }
+  
+  void _filterPackages(String subCategory) {
+    setState(() {
+      _selectedSubCategory = subCategory;
+      _filteredPackages = _packages.where((package) => 
+        package['product_sub_category'] == subCategory).toList();
+    });
   }
 
   @override
@@ -175,7 +207,38 @@ class _MyHomePageState extends State<MyHomePage> {
                     style: const TextStyle(color: Colors.white),
                   ),
                 ),
-              if (_packages.isNotEmpty)
+              if (_subCategories.isNotEmpty)
+                Padding(
+                  padding: const EdgeInsets.symmetric(vertical: 8.0),
+                  child: SizedBox(
+                    height: 50,
+                    child: ListView.builder(
+                      scrollDirection: Axis.horizontal,
+                      itemCount: _subCategories.length,
+                      padding: const EdgeInsets.symmetric(horizontal: 16.0),
+                      itemBuilder: (context, index) {
+                        final subCategory = _subCategories[index];
+                        final isSelected = _selectedSubCategory == subCategory;
+                        
+                        return Padding(
+                          padding: const EdgeInsets.only(right: 8.0),
+                          child: ElevatedButton(
+                            style: ElevatedButton.styleFrom(
+                              backgroundColor: isSelected ? Colors.red : Colors.white,
+                              foregroundColor: isSelected ? Colors.white : Colors.red,
+                              shape: RoundedRectangleBorder(
+                                borderRadius: BorderRadius.circular(20),
+                              ),
+                            ),
+                            onPressed: () => _filterPackages(subCategory),
+                            child: Text(subCategory),
+                          ),
+                        );
+                      },
+                    ),
+                  ),
+                ),
+              if (_filteredPackages.isNotEmpty)
                 Padding(
                   padding: const EdgeInsets.all(16.0),
                   child: Column(
@@ -190,7 +253,7 @@ class _MyHomePageState extends State<MyHomePage> {
                         ),
                       ),
                       const SizedBox(height: 10),
-                      ..._packages.map((package) => PackageCard(package: package)),
+                      ..._filteredPackages.map((package) => PackageCard(package: package)),
                     ],
                   ),
                 ),
