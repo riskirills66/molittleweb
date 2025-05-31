@@ -349,6 +349,9 @@ class _MyHomePageState extends State<MyHomePage> {
                               ),
                               onPressed: () {
                                 if (_phoneController.text.isNotEmpty) {
+                                  setState(() {
+                                    _currentListType = 'listTerbaik';  // Update list type immediately
+                                  });
                                   _showCategorySelectionDialog();
                                 } else {
                                   ScaffoldMessenger.of(context).showSnackBar(
