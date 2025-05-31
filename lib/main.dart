@@ -454,7 +454,12 @@ class _MyHomePageState extends State<MyHomePage> {
                           crossAxisAlignment: CrossAxisAlignment.start,
                           children: [
                             const SizedBox(height: 10),
-                            ..._filteredPackages.map((package) => PackageCard(package: package)),
+                            ..._filteredPackages.map((package) => PackageCard(
+                              package: package,
+                              phoneNumber: _phoneController.text,
+                              currentListType: _currentListType,
+                              selectedCategory: _selectedCategory,
+                            )),
                           ],
                         ),
                       ),
@@ -472,8 +477,17 @@ class _MyHomePageState extends State<MyHomePage> {
 
 class PackageCard extends StatelessWidget {
   final dynamic package;
+  final String phoneNumber;
+  final String currentListType;
+  final String selectedCategory;
 
-  const PackageCard({super.key, required this.package});
+  const PackageCard({
+    super.key, 
+    required this.package,
+    required this.phoneNumber,
+    required this.currentListType,
+    required this.selectedCategory,
+  });
 
   @override
   Widget build(BuildContext context) {
@@ -522,10 +536,7 @@ class PackageCard extends StatelessWidget {
                     foregroundColor: Colors.white,
                   ),
                   onPressed: () {
-                    // Handle buy action
-                    ScaffoldMessenger.of(context).showSnackBar(
-                      SnackBar(content: Text('Membeli ${package['product_name']}')),
-                    );
+                    _buyPackage(context);
                   },
                   child: const Text('Beli'),
                 ),
@@ -533,6 +544,122 @@ class PackageCard extends StatelessWidget {
             ),
           ],
         ),
+      ),
+    );
+  }
+
+  Future<void> _buyPackage(BuildContext context) async {
+    try {
+      // Show loading dialog
+      showDialog(
+        context: context,
+        barrierDismissible: false,
+        builder: (BuildContext context) {
+          return const AlertDialog(
+            content: Row(
+              children: [
+                CircularProgressIndicator(),
+                SizedBox(width: 20),
+                Text("Memproses pembelian..."),
+              ],
+            ),
+          );
+        },
+      );
+
+      final dio = Dio();
+      // final apiUrl = 'http://localhost:4444/inquiry/telkomsel';
+      final apiUrl = 'https://known-instantly-bison.ngrok-free.app/inquiry/telkomsel';
+      
+      final response = await dio.post(
+        apiUrl,
+        options: Options(
+          headers: {
+            'Content-Type': 'application/json',
+            'Accept': 'application/json',
+          },
+        ),
+        data: {
+          'number': phoneNumber,
+          'list': currentListType,
+          'product_id': package['product_id'],
+          'category': selectedCategory,
+        },
+      );
+
+      // Close loading dialog
+      Navigator.of(context).pop();
+
+      if (response.statusCode == 200) {
+        // Show success dialog with purchase details
+        showDialog(
+          context: context,
+          builder: (BuildContext context) {
+            return AlertDialog(
+              title: const Text(
+                'Pembelian Berhasil',
+                style: TextStyle(
+                  color: Colors.green,
+                  fontWeight: FontWeight.bold,
+                ),
+              ),
+              content: Column(
+                mainAxisSize: MainAxisSize.min,
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  _buildDetailRow('Nomor', phoneNumber),
+                  _buildDetailRow('Produk', package['product_name'] ?? 'Tidak tersedia'),
+                  _buildDetailRow('Kuota', package['quota']?.toString() ?? 'Tidak tersedia'),
+                  _buildDetailRow('Harga', 'Rp ${_formatPrice(package['price'])}'),
+                  _buildDetailRow('Kode Bayar', response.data['inv_id']?.toString() ?? 'Tidak tersedia'),
+                ],
+              ),
+              actions: [
+                TextButton(
+                  onPressed: () {
+                    Navigator.of(context).pop();
+                  },
+                  child: const Text('OK'),
+                ),
+              ],
+            );
+          },
+        );
+      } else {
+        // Close loading dialog and show error
+        Navigator.of(context).pop();
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(content: Text('Error: ${response.statusCode} - ${response.data}')),
+        );
+      }
+    } catch (e) {
+      // Close loading dialog and show error
+      Navigator.of(context).pop();
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(content: Text('Network error: $e')),
+      );
+    }
+  }
+
+  Widget _buildDetailRow(String label, String value) {
+    return Padding(
+      padding: const EdgeInsets.symmetric(vertical: 4.0),
+      child: Row(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          SizedBox(
+            width: 80,
+            child: Text(
+              '$label:',
+              style: const TextStyle(
+                fontWeight: FontWeight.bold,
+              ),
+            ),
+          ),
+          Expanded(
+            child: Text(value),
+          ),
+        ],
       ),
     );
   }
