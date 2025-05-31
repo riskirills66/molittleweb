@@ -41,6 +41,7 @@ class _MyHomePageState extends State<MyHomePage> {
   bool _isLoading = false;
   String _errorMessage = '';
   String _selectedCategory = 'DATA'; // Default category
+  String _currentListType = 'listTerbaik'; // Add this to track current list type
   
   @override
   void dispose() {
@@ -48,7 +49,7 @@ class _MyHomePageState extends State<MyHomePage> {
     super.dispose();
   }
 
-  Future<void> _fetchPackages() async {
+  Future<void> _fetchPackages({String? listType}) async {
     setState(() {
       _isLoading = true;
       _errorMessage = '';
@@ -56,6 +57,9 @@ class _MyHomePageState extends State<MyHomePage> {
       _filteredPackages = [];
       _subCategories = [];
       _selectedSubCategory = null;
+      if (listType != null) {
+        _currentListType = listType;
+      }
     });
     
     try {
@@ -73,7 +77,7 @@ class _MyHomePageState extends State<MyHomePage> {
         ),
         data: {
           'number': _phoneController.text,
-          'list': 'listTerbaik',
+          'list': _currentListType, // Use the current list type
           'category': _selectedCategory, // Use the selected category
         },
       );
@@ -177,6 +181,19 @@ class _MyHomePageState extends State<MyHomePage> {
     );
   }
 
+  // Keep existing _showCategorySelectionDialog method
+  
+  // Add this method to fetch packages with a specific list type and category
+  void _fetchPackagesWithType(String listType) {
+    if (_phoneController.text.isNotEmpty) {
+      _fetchPackages(listType: listType);
+    } else {
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(content: Text('Mohon masukkan nomor telepon')),
+      );
+    }
+  }
+
   @override
   Widget build(BuildContext context) {
     return Scaffold(
@@ -184,9 +201,9 @@ class _MyHomePageState extends State<MyHomePage> {
       body: SingleChildScrollView(
         child: Center(
           child: Column(
-            mainAxisAlignment: MainAxisAlignment.start, // Changed from center to start
+            mainAxisAlignment: MainAxisAlignment.start,
             children: <Widget>[
-              const SizedBox(height: 20), // Reduced from 40 to 20
+              const SizedBox(height: 20),
               // Title and input section in a more compact layout
               Padding(
                 padding: const EdgeInsets.symmetric(horizontal: 16.0),
@@ -235,26 +252,52 @@ class _MyHomePageState extends State<MyHomePage> {
                       ],
                     ),
                     const SizedBox(height: 10),
-                    ElevatedButton(
-                      style: ElevatedButton.styleFrom(
-                        backgroundColor: Colors.white,
-                        foregroundColor: Colors.red,
-                        padding: const EdgeInsets.symmetric(vertical: 10.0, horizontal: 24.0),
-                        minimumSize: const Size(120, 40),
-                        shape: RoundedRectangleBorder(
-                          borderRadius: BorderRadius.circular(20),
+                    // Replace the single button with a scrollable row of buttons
+                    SizedBox(
+                      height: 40,
+                      child: SingleChildScrollView(
+                        scrollDirection: Axis.horizontal,
+                        child: Row(
+                          children: [
+                            ElevatedButton(
+                              style: ElevatedButton.styleFrom(
+                                backgroundColor: _currentListType == 'listTerbaik' ? Colors.red : Colors.white,
+                                foregroundColor: _currentListType == 'listTerbaik' ? Colors.white : Colors.red,
+                                padding: const EdgeInsets.symmetric(vertical: 10.0, horizontal: 24.0),
+                                shape: RoundedRectangleBorder(
+                                  borderRadius: BorderRadius.circular(20),
+                                ),
+                              ),
+                              onPressed: () {
+                                if (_phoneController.text.isNotEmpty) {
+                                  _showCategorySelectionDialog();
+                                } else {
+                                  ScaffoldMessenger.of(context).showSnackBar(
+                                    const SnackBar(content: Text('Mohon masukkan nomor telepon')),
+                                  );
+                                }
+                              },
+                              child: const Text('Paket Terbaik'),
+                            ),
+                            const SizedBox(width: 10),
+                            ElevatedButton(
+                              style: ElevatedButton.styleFrom(
+                                backgroundColor: _currentListType == 'list_product' ? Colors.red : Colors.white,
+                                foregroundColor: _currentListType == 'list_product' ? Colors.white : Colors.red,
+                                padding: const EdgeInsets.symmetric(vertical: 10.0, horizontal: 24.0),
+                                shape: RoundedRectangleBorder(
+                                  borderRadius: BorderRadius.circular(20),
+                                ),
+                              ),
+                              onPressed: () {
+                                _selectedCategory = 'DATA'; // Always use DATA category
+                                _fetchPackagesWithType('list_product');
+                              },
+                              child: const Text('Paket Data'),
+                            ),
+                          ],
                         ),
                       ),
-                      onPressed: () {
-                        if (_phoneController.text.isNotEmpty) {
-                          _showCategorySelectionDialog();
-                        } else {
-                          ScaffoldMessenger.of(context).showSnackBar(
-                            const SnackBar(content: Text('Mohon masukkan nomor telepon')),
-                          );
-                        }
-                      },
-                      child: const Text('Paket Terbaik'),
                     ),
                     const SizedBox(height: 5),
                     Text(
