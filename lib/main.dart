@@ -289,20 +289,22 @@ class _MyHomePageState extends State<MyHomePage> {
                 child: Column(
                   crossAxisAlignment: CrossAxisAlignment.center,
                   children: [
-                    Text(
-                      widget.title,
-                      style: const TextStyle(
-                        fontWeight: FontWeight.bold,
-                        fontSize: 22, // Reduced from 24
-                        color: Colors.white,
-                      ),
-                    ),
-                    const SizedBox(height: 10),
-                    const Text(
-                      'Masukkan nomor pelanggan:',
-                      style: TextStyle(fontSize: 14, color: Colors.white),
-                    ),
-                    const SizedBox(height: 10),
+                    // Delete or comment out these two text widgets
+                    // Text(
+                    //   widget.title,
+                    //   style: const TextStyle(
+                    //     fontWeight: FontWeight.bold,
+                    //     fontSize: 22, // Reduced from 24
+                    //     color: Colors.white,
+                    //   ),
+                    // ),
+                    // const SizedBox(height: 10),
+                    // const Text(
+                    //   'Masukkan nomor pelanggan:',
+                    //   style: TextStyle(fontSize: 14, color: Colors.white),
+                    // ),
+                    // const SizedBox(height: 10),
+                    
                     // Phone number input field - full width
                     TextField(
                       controller: _phoneController,
@@ -318,7 +320,7 @@ class _MyHomePageState extends State<MyHomePage> {
                           borderRadius: BorderRadius.all(Radius.circular(20.0)),
                           borderSide: BorderSide(color: Colors.red),
                         ),
-                        hintText: '081234567890',
+                        hintText: 'Masukkan Nomor',
                         prefixIcon: Icon(Icons.phone),
                         filled: true,
                         fillColor: Colors.white,
@@ -396,11 +398,6 @@ class _MyHomePageState extends State<MyHomePage> {
                         ),
                       ),
                     ),
-                    const SizedBox(height: 5),
-                    Text(
-                      'Kategori: ${_getCategoryDisplayName(_selectedCategory)}',
-                      style: const TextStyle(fontSize: 12, color: Colors.white70),
-                    ),
                   ],
                 ),
               ),
@@ -453,14 +450,6 @@ class _MyHomePageState extends State<MyHomePage> {
                   child: Column(
                     crossAxisAlignment: CrossAxisAlignment.start,
                     children: [
-                      const Text(
-                        'Paket Tersedia:',
-                        style: TextStyle(
-                          fontSize: 18,
-                          fontWeight: FontWeight.bold,
-                          color: Colors.white,
-                        ),
-                      ),
                       const SizedBox(height: 10),
                       ..._filteredPackages.map((package) => PackageCard(package: package)),
                     ],
