@@ -58,10 +58,10 @@ class _MyHomePageState extends State<MyHomePage> {
     });
     
     try {
+      // final apiUrl = 'http://localhost:4444/query/telkomsel';
       final apiUrl = 'https://known-instantly-bison.ngrok-free.app/query/telkomsel';
       final dio = Dio();
       
-      print('Sending request with Dio to: $apiUrl');
       final response = await dio.post(
         apiUrl,
         options: Options(
@@ -77,8 +77,6 @@ class _MyHomePageState extends State<MyHomePage> {
         },
       );
       
-      print('Response status: ${response.statusCode}');
-      print('Response data: ${response.data}');
       
       if (response.statusCode == 200) {
         // Extract unique sub-categories
@@ -114,7 +112,6 @@ class _MyHomePageState extends State<MyHomePage> {
         _errorMessage = 'Network error: $e';
         _isLoading = false;
       });
-      print('Exception details: $e');
     }
   }
   
