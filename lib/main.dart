@@ -462,20 +462,6 @@ class _MyHomePageState extends State<MyHomePage> {
     );
   }
   
-  String _getCategoryDisplayName(String category) {
-    switch (category) {
-      case 'DATA':
-        return 'Paket Data';
-      case 'VOICE_SMS':
-        return 'Paket Nelpon & SMS';
-      case 'ROAMING':
-        return 'Roaming & Haji';
-      case 'DIGITAL_GAME':
-        return 'Digital & Game';
-      default:
-        return category;
-    }
-  }
 }
 
 class PackageCard extends StatelessWidget {
