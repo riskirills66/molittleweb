@@ -130,70 +130,84 @@ class _MyHomePageState extends State<MyHomePage> {
       body: SingleChildScrollView(
         child: Center(
           child: Column(
-            mainAxisAlignment: MainAxisAlignment.center,
+            mainAxisAlignment: MainAxisAlignment.start, // Changed from center to start
             children: <Widget>[
-              const SizedBox(height: 40),
-              // Added the title text at the top of the body instead
-              Text(
-                widget.title,
-                style: const TextStyle(
-                  fontWeight: FontWeight.bold,
-                  fontSize: 24, 
-                  color: Colors.white,
-                ),
-              ),
-              const SizedBox(height: 30),
-              const Text(
-                'Masukkan nomor pelanggan:',
-                style: TextStyle(fontSize: 16, color: Colors.white),
-              ),
-              const SizedBox(height: 16),
-              SizedBox(
-                width: 300,
-                child: TextField(
-                  controller: _phoneController,
-                  decoration: const InputDecoration(
-                    border: OutlineInputBorder(
-                      borderRadius: BorderRadius.all(Radius.circular(20.0)),
+              const SizedBox(height: 20), // Reduced from 40 to 20
+              // Title and input section in a more compact layout
+              Padding(
+                padding: const EdgeInsets.symmetric(horizontal: 16.0),
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.center,
+                  children: [
+                    Text(
+                      widget.title,
+                      style: const TextStyle(
+                        fontWeight: FontWeight.bold,
+                        fontSize: 22, // Reduced from 24
+                        color: Colors.white,
+                      ),
                     ),
-                    enabledBorder: OutlineInputBorder(
-                      borderRadius: BorderRadius.all(Radius.circular(20.0)),
-                      borderSide: BorderSide(color: Colors.grey),
+                    const SizedBox(height: 10),
+                    const Text(
+                      'Masukkan nomor pelanggan:',
+                      style: TextStyle(fontSize: 14, color: Colors.white),
                     ),
-                    focusedBorder: OutlineInputBorder(
-                      borderRadius: BorderRadius.all(Radius.circular(20.0)),
-                      borderSide: BorderSide(color: Colors.red),
+                    const SizedBox(height: 10),
+                    // Phone number input field - full width
+                    TextField(
+                      controller: _phoneController,
+                      decoration: const InputDecoration(
+                        border: OutlineInputBorder(
+                          borderRadius: BorderRadius.all(Radius.circular(20.0)),
+                        ),
+                        enabledBorder: OutlineInputBorder(
+                          borderRadius: BorderRadius.all(Radius.circular(20.0)),
+                          borderSide: BorderSide(color: Colors.grey),
+                        ),
+                        focusedBorder: OutlineInputBorder(
+                          borderRadius: BorderRadius.all(Radius.circular(20.0)),
+                          borderSide: BorderSide(color: Colors.red),
+                        ),
+                        hintText: '081234567890',
+                        prefixIcon: Icon(Icons.phone),
+                        filled: true,
+                        fillColor: Colors.white,
+                        contentPadding: EdgeInsets.symmetric(vertical: 8.0),
+                      ),
+                      keyboardType: TextInputType.phone,
+                      inputFormatters: [
+                        FilteringTextInputFormatter.digitsOnly,
+                        LengthLimitingTextInputFormatter(15),
+                      ],
                     ),
-                    hintText: '081234567890',
-                    prefixIcon: Icon(Icons.phone),
-                    filled: true,
-                    fillColor: Colors.white,
-                  ),
-                  keyboardType: TextInputType.phone,
-                  inputFormatters: [
-                    FilteringTextInputFormatter.digitsOnly,
-                    LengthLimitingTextInputFormatter(15),
+                    const SizedBox(height: 10),
+                    // Submit button - centered below the input field
+                    ElevatedButton(
+                      style: ElevatedButton.styleFrom(
+                        backgroundColor: Colors.white,
+                        foregroundColor: Colors.red,
+                        padding: const EdgeInsets.symmetric(vertical: 10.0, horizontal: 24.0),
+                        minimumSize: const Size(120, 40),
+                        shape: RoundedRectangleBorder(
+                          borderRadius: BorderRadius.circular(20),
+                        ),
+                      ),
+                      onPressed: () {
+                        if (_phoneController.text.isNotEmpty) {
+                          _fetchPackages();
+                        } else {
+                          ScaffoldMessenger.of(context).showSnackBar(
+                            const SnackBar(content: Text('Mohon masukkan nomor telepon')),
+                          );
+                        }
+                      },
+                      child: const Text('Submit'),
+                    ),
                   ],
                 ),
               ),
-              const SizedBox(height: 16),
-              ElevatedButton(
-                style: ElevatedButton.styleFrom(
-                  backgroundColor: Colors.white,
-                  foregroundColor: Colors.red,
-                ),
-                onPressed: () {
-                  if (_phoneController.text.isNotEmpty) {
-                    _fetchPackages();
-                  } else {
-                    ScaffoldMessenger.of(context).showSnackBar(
-                      const SnackBar(content: Text('Mohon masukkan nomor telepon')),
-                    );
-                  }
-                },
-                child: const Text('Submit'),
-              ),
-              const SizedBox(height: 20),
+              
+              const SizedBox(height: 12), // Reduced from 20
               if (_isLoading)
                 const CircularProgressIndicator(color: Colors.white),
               if (_errorMessage.isNotEmpty)
