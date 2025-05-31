@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:dio/dio.dart';
+import 'package:url_launcher/url_launcher.dart';
 
 void main() {
   runApp(const MyApp());
@@ -685,16 +686,30 @@ class PackageCard extends StatelessWidget {
                     foregroundColor: Colors.white,
                   ),
                   onPressed: () async {
-                    // Copy inv_id to clipboard
-                    await Clipboard.setData(ClipboardData(text: response.data['inv_id']?.toString() ?? 'Tidak tersedia'));
+                    // Open Telkomsel link with inv_id
+                    final invId = response.data['inv_id']?.toString() ?? '';
+                    final url = 'https://www.telkomsel.com/shops/channel/o2o/$invId/success';
                     
-                    // Show confirmation message
-                    ScaffoldMessenger.of(context).showSnackBar(
-                      const SnackBar(
-                        content: Text('Kode pembayaran telah disalin'),
-                        duration: Duration(seconds: 2),
-                      ),
-                    );
+                    try {
+                      final uri = Uri.parse(url);
+                      if (await canLaunchUrl(uri)) {
+                        await launchUrl(uri, mode: LaunchMode.externalApplication);
+                      } else {
+                        ScaffoldMessenger.of(context).showSnackBar(
+                          const SnackBar(
+                            content: Text('Tidak dapat membuka link'),
+                            duration: Duration(seconds: 2),
+                          ),
+                        );
+                      }
+                    } catch (e) {
+                      ScaffoldMessenger.of(context).showSnackBar(
+                        SnackBar(
+                          content: Text('Error membuka link: $e'),
+                          duration: Duration(seconds: 2),
+                        ),
+                      );
+                    }
                     
                     Navigator.of(context).pop();
                   },
