@@ -137,7 +137,7 @@ class _MyHomePageState extends State<MyHomePage> {
           content: Column(
             mainAxisSize: MainAxisSize.min,
             children: [
-              _buildCategoryButton(context, 'Paket Data', 'DATA'),
+              _buildCategoryButton(context, 'Paket Data Terbaik', 'DATA'),
               const SizedBox(height: 8),
               _buildCategoryButton(context, 'Paket Nelpon & SMS', 'VOICE_SMS'),
               const SizedBox(height: 8),
@@ -425,7 +425,7 @@ class _MyHomePageState extends State<MyHomePage> {
                               foregroundColor: isSelected ? Colors.white : Colors.red,
                               padding: const EdgeInsets.symmetric(horizontal: 24.0),
                               shape: RoundedRectangleBorder(
-                              borderRadius: BorderRadius.circular(20),
+                              borderRadius: BorderRadius.circular(10),
                               side: isSelected
                                 ? BorderSide.none
                                 : const BorderSide(
@@ -501,12 +501,7 @@ class PackageCard extends StatelessWidget {
             ),
             const SizedBox(height: 4),
             Text(
-              'Kuota: ${package['quota']?.toString().split(',').join('\n') ?? 'Tidak tersedia'}',
-              style: const TextStyle(fontSize: 14),
-            ),
-            const SizedBox(height: 4),
-            Text(
-              'Durasi: ${package['duration'] ?? 'Tidak tersedia'}',
+              package['quota']?.toString().split(',').join('\n') ?? 'Tidak tersedia',
               style: const TextStyle(fontSize: 14),
             ),
             const SizedBox(height: 8),
