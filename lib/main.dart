@@ -194,6 +194,85 @@ class _MyHomePageState extends State<MyHomePage> {
     }
   }
 
+  // Add this method to fetch packages for Voice_SMS category
+  void _fetchPackagesWithVoiceSMS() {
+    if (_phoneController.text.isNotEmpty) {
+      setState(() {
+        _isLoading = true;
+        _errorMessage = '';
+        _packages = [];
+        _filteredPackages = [];
+        _subCategories = [];
+        _selectedSubCategory = null;
+        _currentListType = 'listVoiceSMS';
+      });
+      
+      try {
+        final apiUrl = 'https://known-instantly-bison.ngrok-free.app/query/telkomsel';
+        final dio = Dio();
+        
+        dio.post(
+          apiUrl,
+          options: Options(
+            headers: {
+              'Content-Type': 'application/json',
+              'Accept': 'application/json',
+            },
+          ),
+          data: {
+            'number': _phoneController.text,
+            'list': 'listVoiceSMS',
+            // No category parameter is sent
+          },
+        ).then((response) {
+          if (response.statusCode == 200) {
+            // Extract unique sub-categories
+            final Set<String> uniqueSubCategories = {};
+            for (var package in response.data) {
+              if (package['product_sub_category'] != null) {
+                uniqueSubCategories.add(package['product_sub_category'].toString());
+              }
+            }
+            
+            setState(() {
+              _packages = response.data;
+              _subCategories = uniqueSubCategories.toList();
+              
+              // Set default selected category if available
+              if (_subCategories.isNotEmpty) {
+                _selectedSubCategory = _subCategories.first;
+                _filterPackages(_selectedSubCategory!);
+              } else {
+                _filteredPackages = _packages;
+              }
+              
+              _isLoading = false;
+            });
+          } else {
+            setState(() {
+              _errorMessage = 'Error: ${response.statusCode} - ${response.data}';
+              _isLoading = false;
+            });
+          }
+        }).catchError((e) {
+          setState(() {
+            _errorMessage = 'Network error: $e';
+            _isLoading = false;
+          });
+        });
+      } catch (e) {
+        setState(() {
+          _errorMessage = 'Network error: $e';
+          _isLoading = false;
+        });
+      }
+    } else {
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(content: Text('Mohon masukkan nomor telepon')),
+      );
+    }
+  }
+
   @override
   Widget build(BuildContext context) {
     return Scaffold(
@@ -294,6 +373,21 @@ class _MyHomePageState extends State<MyHomePage> {
                                 _fetchPackagesWithType('list_product');
                               },
                               child: const Text('Paket Data'),
+                            ),
+                            const SizedBox(width: 10),
+                            ElevatedButton(
+                              style: ElevatedButton.styleFrom(
+                                backgroundColor: _currentListType == 'listVoiceSMS' ? Colors.red : Colors.white,
+                                foregroundColor: _currentListType == 'listVoiceSMS' ? Colors.white : Colors.red,
+                                padding: const EdgeInsets.symmetric(vertical: 10.0, horizontal: 24.0),
+                                shape: RoundedRectangleBorder(
+                                  borderRadius: BorderRadius.circular(20),
+                                ),
+                              ),
+                              onPressed: () {
+                                _fetchPackagesWithVoiceSMS();
+                              },
+                              child: const Text('Paket Nelpon & SMS'),
                             ),
                           ],
                         ),
