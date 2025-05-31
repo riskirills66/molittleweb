@@ -277,196 +277,187 @@ class _MyHomePageState extends State<MyHomePage> {
   Widget build(BuildContext context) {
     return Scaffold(
       // Removed appBar completely
-      body: SingleChildScrollView(
-        child: Center(
-          child: Column(
-            mainAxisAlignment: MainAxisAlignment.start,
-            children: <Widget>[
-              const SizedBox(height: 20),
-              // Title and input section in a more compact layout
-              Padding(
-                padding: const EdgeInsets.symmetric(horizontal: 16.0),
-                child: Column(
-                  crossAxisAlignment: CrossAxisAlignment.center,
-                  children: [
-                    // Delete or comment out these two text widgets
-                    // Text(
-                    //   widget.title,
-                    //   style: const TextStyle(
-                    //     fontWeight: FontWeight.bold,
-                    //     fontSize: 22, // Reduced from 24
-                    //     color: Colors.white,
-                    //   ),
-                    // ),
-                    // const SizedBox(height: 10),
-                    // const Text(
-                    //   'Masukkan nomor pelanggan:',
-                    //   style: TextStyle(fontSize: 14, color: Colors.white),
-                    // ),
-                    // const SizedBox(height: 10),
-                    
-                    // Phone number input field - full width
-                    TextField(
-                      controller: _phoneController,
-                      decoration: const InputDecoration(
-                        border: OutlineInputBorder(
-                          borderRadius: BorderRadius.all(Radius.circular(20.0)),
+      body: Column(
+        children: [
+          // Red background section
+          Container(
+            color: const Color.fromARGB(255, 165, 11, 0),
+            padding: const EdgeInsets.fromLTRB(16.0, 20.0, 16.0, 20.0),
+            child: Column(
+              children: [
+                TextField(
+                  controller: _phoneController,
+                  decoration: const InputDecoration(
+                    border: OutlineInputBorder(
+                      borderRadius: BorderRadius.all(Radius.circular(20.0)),
+                    ),
+                    enabledBorder: OutlineInputBorder(
+                      borderRadius: BorderRadius.all(Radius.circular(20.0)),
+                      borderSide: BorderSide(color: Colors.grey),
+                    ),
+                    focusedBorder: OutlineInputBorder(
+                      borderRadius: BorderRadius.all(Radius.circular(20.0)),
+                      borderSide: BorderSide(color: Colors.red),
+                    ),
+                    hintText: 'Masukkan Nomor',
+                    prefixIcon: Icon(Icons.phone),
+                    filled: true,
+                    fillColor: Colors.white,
+                    contentPadding: EdgeInsets.symmetric(vertical: 8.0),
+                  ),
+                  keyboardType: TextInputType.phone,
+                  inputFormatters: [
+                    FilteringTextInputFormatter.digitsOnly,
+                    LengthLimitingTextInputFormatter(15),
+                  ],
+                ),
+                const SizedBox(height: 10),
+                // Scrollable row of buttons
+                SizedBox(
+                  height: 40,
+                  child: SingleChildScrollView(
+                    scrollDirection: Axis.horizontal,
+                    child: Row(
+                      children: [
+                        ElevatedButton(
+                          style: ElevatedButton.styleFrom(
+                            backgroundColor: _currentListType == 'listTerbaik' ? Colors.red : Colors.white,
+                            foregroundColor: _currentListType == 'listTerbaik' ? Colors.white : Colors.red,
+                            padding: const EdgeInsets.symmetric(vertical: 10.0, horizontal: 24.0),
+                            shape: RoundedRectangleBorder(
+                              borderRadius: BorderRadius.circular(20),
+                            ),
+                          ),
+                          onPressed: () {
+                            if (_phoneController.text.isNotEmpty) {
+                              setState(() {
+                                _currentListType = 'listTerbaik';
+                              });
+                              _showCategorySelectionDialog();
+                            } else {
+                              ScaffoldMessenger.of(context).showSnackBar(
+                                const SnackBar(content: Text('Mohon masukkan nomor telepon')),
+                              );
+                            }
+                          },
+                          child: const Text('Paket Terbaik'),
                         ),
-                        enabledBorder: OutlineInputBorder(
-                          borderRadius: BorderRadius.all(Radius.circular(20.0)),
-                          borderSide: BorderSide(color: Colors.grey),
+                        const SizedBox(width: 10),
+                        ElevatedButton(
+                          style: ElevatedButton.styleFrom(
+                            backgroundColor: _currentListType == 'list_product' ? Colors.red : Colors.white,
+                            foregroundColor: _currentListType == 'list_product' ? Colors.white : Colors.red,
+                            padding: const EdgeInsets.symmetric(vertical: 10.0, horizontal: 24.0),
+                            shape: RoundedRectangleBorder(
+                              borderRadius: BorderRadius.circular(20),
+                            ),
+                          ),
+                          onPressed: () {
+                            _selectedCategory = 'DATA'; // Always use DATA category
+                            _fetchPackagesWithType('list_product');
+                          },
+                          child: const Text('Paket Data'),
                         ),
-                        focusedBorder: OutlineInputBorder(
-                          borderRadius: BorderRadius.all(Radius.circular(20.0)),
-                          borderSide: BorderSide(color: Colors.red),
+                        const SizedBox(width: 10),
+                        ElevatedButton(
+                          style: ElevatedButton.styleFrom(
+                            backgroundColor: _currentListType == 'listVoiceSMS' ? Colors.red : Colors.white,
+                            foregroundColor: _currentListType == 'listVoiceSMS' ? Colors.white : Colors.red,
+                            padding: const EdgeInsets.symmetric(vertical: 10.0, horizontal: 24.0),
+                            shape: RoundedRectangleBorder(
+                              borderRadius: BorderRadius.circular(20),
+                            ),
+                          ),
+                          onPressed: () {
+                            _fetchPackagesWithVoiceSMS();
+                          },
+                          child: const Text('Paket Nelpon & SMS'),
                         ),
-                        hintText: 'Masukkan Nomor',
-                        prefixIcon: Icon(Icons.phone),
-                        filled: true,
-                        fillColor: Colors.white,
-                        contentPadding: EdgeInsets.symmetric(vertical: 8.0),
-                      ),
-                      keyboardType: TextInputType.phone,
-                      inputFormatters: [
-                        FilteringTextInputFormatter.digitsOnly,
-                        LengthLimitingTextInputFormatter(15),
                       ],
                     ),
-                    const SizedBox(height: 10),
-                    // Replace the single button with a scrollable row of buttons
-                    SizedBox(
-                      height: 40,
-                      child: SingleChildScrollView(
-                        scrollDirection: Axis.horizontal,
-                        child: Row(
+                  ),
+                ),
+              ],
+            ),
+          ),
+          
+          // Cream background section for subcategories and content
+          Expanded(
+            child: Container(
+              color: const Color(0xFFF5F5DC), // Cream color
+              child: SingleChildScrollView(
+                child: Column(
+                  children: [
+                    if (_isLoading)
+                      const Padding(
+                        padding: EdgeInsets.all(16.0),
+                        child: Center(child: CircularProgressIndicator(color: Colors.red)),
+                      ),
+                    if (_errorMessage.isNotEmpty)
+                      Padding(
+                        padding: const EdgeInsets.all(16.0),
+                        child: Text(
+                          _errorMessage,
+                          style: const TextStyle(color: Colors.red),
+                        ),
+                      ),
+                    if (_subCategories.isNotEmpty)
+                      Padding(
+                        padding: const EdgeInsets.symmetric(vertical: 8.0),
+                        child: Container(
+                          height: 30,
+                          alignment: Alignment.center,
+                          child: ListView.builder(
+                            scrollDirection: Axis.horizontal,
+                            itemCount: _subCategories.length,
+                            padding: const EdgeInsets.symmetric(horizontal: 16.0),
+                            clipBehavior: Clip.none,
+                            itemBuilder: (context, index) {
+                              final subCategory = _subCategories[index];
+                              final isSelected = _selectedSubCategory == subCategory;
+                              
+                              return Padding(
+                                padding: const EdgeInsets.only(right: 10.0),
+                                child: Center(
+                                  child: ElevatedButton(
+                                    style: ElevatedButton.styleFrom(
+                                      backgroundColor: isSelected ? Colors.red : Colors.white,
+                                      foregroundColor: isSelected ? Colors.white : Colors.red,
+                                      padding: const EdgeInsets.symmetric(horizontal: 24.0),
+                                      shape: RoundedRectangleBorder(
+                                        borderRadius: BorderRadius.circular(20),
+                                      ),
+                                      visualDensity: VisualDensity.compact,
+                                      tapTargetSize: MaterialTapTargetSize.shrinkWrap,
+                                      fixedSize: const Size.fromHeight(36),
+                                      elevation: 0,
+                                    ),
+                                    onPressed: () => _filterPackages(subCategory),
+                                    child: Text(subCategory),
+                                  ),
+                                ),
+                              );
+                            },
+                          ),
+                        ),
+                      ),
+                    if (_filteredPackages.isNotEmpty)
+                      Padding(
+                        padding: const EdgeInsets.all(16.0),
+                        child: Column(
+                          crossAxisAlignment: CrossAxisAlignment.start,
                           children: [
-                            ElevatedButton(
-                              style: ElevatedButton.styleFrom(
-                                backgroundColor: _currentListType == 'listTerbaik' ? Colors.red : Colors.white,
-                                foregroundColor: _currentListType == 'listTerbaik' ? Colors.white : Colors.red,
-                                padding: const EdgeInsets.symmetric(vertical: 10.0, horizontal: 24.0),
-                                shape: RoundedRectangleBorder(
-                                  borderRadius: BorderRadius.circular(20),
-                                ),
-                              ),
-                              onPressed: () {
-                                if (_phoneController.text.isNotEmpty) {
-                                  setState(() {
-                                    _currentListType = 'listTerbaik';  // Update list type immediately
-                                  });
-                                  _showCategorySelectionDialog();
-                                } else {
-                                  ScaffoldMessenger.of(context).showSnackBar(
-                                    const SnackBar(content: Text('Mohon masukkan nomor telepon')),
-                                  );
-                                }
-                              },
-                              child: const Text('Paket Terbaik'),
-                            ),
-                            const SizedBox(width: 10),
-                            ElevatedButton(
-                              style: ElevatedButton.styleFrom(
-                                backgroundColor: _currentListType == 'list_product' ? Colors.red : Colors.white,
-                                foregroundColor: _currentListType == 'list_product' ? Colors.white : Colors.red,
-                                padding: const EdgeInsets.symmetric(vertical: 10.0, horizontal: 24.0),
-                                shape: RoundedRectangleBorder(
-                                  borderRadius: BorderRadius.circular(20),
-                                ),
-                              ),
-                              onPressed: () {
-                                _selectedCategory = 'DATA'; // Always use DATA category
-                                _fetchPackagesWithType('list_product');
-                              },
-                              child: const Text('Paket Data'),
-                            ),
-                            const SizedBox(width: 10),
-                            ElevatedButton(
-                              style: ElevatedButton.styleFrom(
-                                backgroundColor: _currentListType == 'listVoiceSMS' ? Colors.red : Colors.white,
-                                foregroundColor: _currentListType == 'listVoiceSMS' ? Colors.white : Colors.red,
-                                padding: const EdgeInsets.symmetric(vertical: 10.0, horizontal: 24.0),
-                                shape: RoundedRectangleBorder(
-                                  borderRadius: BorderRadius.circular(20),
-                                ),
-                              ),
-                              onPressed: () {
-                                _fetchPackagesWithVoiceSMS();
-                              },
-                              child: const Text('Paket Nelpon & SMS'),
-                            ),
+                            const SizedBox(height: 10),
+                            ..._filteredPackages.map((package) => PackageCard(package: package)),
                           ],
                         ),
                       ),
-                    ),
                   ],
                 ),
               ),
-              
-              const SizedBox(height: 12), // Reduced from 20
-              if (_isLoading)
-                const CircularProgressIndicator(color: Colors.white),
-              if (_errorMessage.isNotEmpty)
-                Padding(
-                  padding: const EdgeInsets.all(16.0),
-                  child: Text(
-                    _errorMessage,
-                    style: const TextStyle(color: Colors.white),
-                  ),
-                ),
-              if (_subCategories.isNotEmpty)
-                Padding(
-                  padding: const EdgeInsets.symmetric(vertical: 8.0),
-                  child: Container(
-                    height: 30,
-                    alignment: Alignment.center, // Center alignment to prevent cutting
-                    child: ListView.builder(
-                      scrollDirection: Axis.horizontal,
-                      itemCount: _subCategories.length,
-                      padding: const EdgeInsets.symmetric(horizontal: 16.0),
-                      clipBehavior: Clip.none, // Disable clipping
-                      itemBuilder: (context, index) {
-                        final subCategory = _subCategories[index];
-                        final isSelected = _selectedSubCategory == subCategory;
-                        
-                        return Padding(
-                          padding: const EdgeInsets.only(right: 10.0),
-                          child: Center( // Wrap button in Center widget
-                            child: ElevatedButton(
-                              style: ElevatedButton.styleFrom(
-                                backgroundColor: isSelected ? Colors.red : Colors.white,
-                                foregroundColor: isSelected ? Colors.white : Colors.red,
-                                padding: const EdgeInsets.symmetric(horizontal: 24.0),
-                                shape: RoundedRectangleBorder(
-                                  borderRadius: BorderRadius.circular(20),
-                                ),
-                                visualDensity: VisualDensity.compact,
-                                tapTargetSize: MaterialTapTargetSize.shrinkWrap,
-                                fixedSize: const Size.fromHeight(36), // Use fixedSize instead
-                                elevation: 0,
-                              ),
-                              onPressed: () => _filterPackages(subCategory),
-                              child: Text(subCategory),
-                            ),
-                          ),
-                        );
-                      },
-                    ),
-                  ),
-                ),
-              if (_filteredPackages.isNotEmpty)
-                Padding(
-                  padding: const EdgeInsets.all(16.0),
-                  child: Column(
-                    crossAxisAlignment: CrossAxisAlignment.start,
-                    children: [
-                      const SizedBox(height: 10),
-                      ..._filteredPackages.map((package) => PackageCard(package: package)),
-                    ],
-                  ),
-                ),
-            ],
+            ),
           ),
-        ),
+        ],
       ),
     );
   }
