@@ -597,9 +597,9 @@ class PackageCard extends StatelessWidget {
           builder: (BuildContext context) {
             return AlertDialog(
               title: const Text(
-                'Pembelian Berhasil',
+                'Detail Pembelian',
                 style: TextStyle(
-                  color: Colors.green,
+                  color: Color.fromARGB(255, 255, 51, 0),
                   fontWeight: FontWeight.bold,
                 ),
               ),
@@ -611,15 +611,83 @@ class PackageCard extends StatelessWidget {
                   _buildDetailRow('Produk', package['product_name'] ?? 'Tidak tersedia'),
                   _buildDetailRow('Kuota', package['quota']?.toString() ?? 'Tidak tersedia'),
                   _buildDetailRow('Harga', 'Rp ${_formatPrice(package['price'])}'),
-                  _buildDetailRow('Kode Bayar', response.data['inv_id']?.toString() ?? 'Tidak tersedia'),
+                  const SizedBox(height: 16),
+                  // Barcode section
+                  const Text(
+                    'Kode Bayar:',
+                    style: TextStyle(
+                      fontWeight: FontWeight.bold,
+                      fontSize: 16,
+                    ),
+                  ),
+                  const SizedBox(height: 8),
+                  // Barcode image
+                  Center(
+                    child: Image.network(
+                      'https://api.qrserver.com/v1/create-qr-code/?size=150x150&data=${response.data['inv_id']?.toString() ?? 'Tidak tersedia'}',
+                      height: 100,
+                      width: 200,
+                      errorBuilder: (context, error, stackTrace) {
+                        return Container(
+                          height: 100,
+                          width: 200,
+                          decoration: BoxDecoration(
+                            border: Border.all(color: Colors.grey),
+                            borderRadius: BorderRadius.circular(4),
+                          ),
+                          child: const Center(
+                            child: Text(
+                              'Barcode tidak tersedia',
+                              style: TextStyle(color: Colors.grey),
+                            ),
+                          ),
+                        );
+                      },
+                      loadingBuilder: (context, child, loadingProgress) {
+                        if (loadingProgress == null) return child;
+                        return Container(
+                          height: 100,
+                          width: 200,
+                          child: const Center(
+                            child: CircularProgressIndicator(),
+                          ),
+                        );
+                      },
+                    ),
+                  ),
+                  const SizedBox(height: 8),
+                  // Large code text
+                  Center(
+                    child: Container(
+                      padding: const EdgeInsets.all(12),
+                      decoration: BoxDecoration(
+                        color: Colors.grey[100],
+                        borderRadius: BorderRadius.circular(8),
+                        border: Border.all(color: Colors.grey[300]!),
+                      ),
+                      child: Text(
+                        response.data['inv_id']?.toString() ?? 'Tidak tersedia',
+                        style: const TextStyle(
+                          fontSize: 24,
+                          fontWeight: FontWeight.bold,
+                          color: Colors.black,
+                          letterSpacing: 2,
+                        ),
+                      ),
+                    ),
+                  ),
                 ],
               ),
               actions: [
-                TextButton(
+                ElevatedButton(
+                  style: ElevatedButton.styleFrom(
+                    backgroundColor: Colors.red,
+                    foregroundColor: Colors.white,
+                  ),
                   onPressed: () {
                     Navigator.of(context).pop();
                   },
-                  child: const Text('OK'),
+                  child: const Text('Lanjutkan'),
                 ),
               ],
             );
