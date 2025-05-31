@@ -40,6 +40,7 @@ class _MyHomePageState extends State<MyHomePage> {
   String? _selectedSubCategory;
   bool _isLoading = false;
   String _errorMessage = '';
+  String _selectedCategory = 'DATA'; // Default category
   
   @override
   void dispose() {
@@ -73,7 +74,7 @@ class _MyHomePageState extends State<MyHomePage> {
         data: {
           'number': _phoneController.text,
           'list': 'listTerbaik',
-          'category': 'DATA',
+          'category': _selectedCategory, // Use the selected category
         },
       );
       
@@ -121,6 +122,59 @@ class _MyHomePageState extends State<MyHomePage> {
       _filteredPackages = _packages.where((package) => 
         package['product_sub_category'] == subCategory).toList();
     });
+  }
+
+  // Add this method to the _MyHomePageState class
+  void _showCategorySelectionDialog() {
+    showDialog(
+      context: context,
+      builder: (BuildContext context) {
+        return AlertDialog(
+          content: Column(
+            mainAxisSize: MainAxisSize.min,
+            children: [
+              _buildCategoryButton(context, 'Paket Data', 'DATA'),
+              const SizedBox(height: 8),
+              _buildCategoryButton(context, 'Paket Nelpon & SMS', 'VOICE_SMS'),
+              const SizedBox(height: 8),
+              _buildCategoryButton(context, 'Roaming & Haji', 'ROAMING'),
+              const SizedBox(height: 8),
+              _buildCategoryButton(context, 'Digital & Game', 'DIGITAL_GAME'),
+            ],
+          ),
+        );
+      },
+    );
+  }
+
+  Widget _buildCategoryButton(BuildContext context, String label, String categoryValue) {
+    return SizedBox(
+      width: double.infinity,
+      child: ElevatedButton(
+        style: ElevatedButton.styleFrom(
+          backgroundColor: Colors.red,
+          foregroundColor: Colors.white,
+          padding: const EdgeInsets.symmetric(vertical: 12),
+          shape: RoundedRectangleBorder(
+            borderRadius: BorderRadius.circular(8),
+          ),
+        ),
+        onPressed: () {
+          setState(() {
+            _selectedCategory = categoryValue;
+          });
+          Navigator.of(context).pop(); // Close dialog
+          if (_phoneController.text.isNotEmpty) {
+            _fetchPackages();
+          } else {
+            ScaffoldMessenger.of(context).showSnackBar(
+              const SnackBar(content: Text('Mohon masukkan nomor telepon')),
+            );
+          }
+        },
+        child: Text(label),
+      ),
+    );
   }
 
   @override
@@ -181,7 +235,6 @@ class _MyHomePageState extends State<MyHomePage> {
                       ],
                     ),
                     const SizedBox(height: 10),
-                    // Submit button - centered below the input field
                     ElevatedButton(
                       style: ElevatedButton.styleFrom(
                         backgroundColor: Colors.white,
@@ -194,14 +247,19 @@ class _MyHomePageState extends State<MyHomePage> {
                       ),
                       onPressed: () {
                         if (_phoneController.text.isNotEmpty) {
-                          _fetchPackages();
+                          _showCategorySelectionDialog();
                         } else {
                           ScaffoldMessenger.of(context).showSnackBar(
                             const SnackBar(content: Text('Mohon masukkan nomor telepon')),
                           );
                         }
                       },
-                      child: const Text('Submit'),
+                      child: const Text('Paket Terbaik'),
+                    ),
+                    const SizedBox(height: 5),
+                    Text(
+                      'Kategori: ${_getCategoryDisplayName(_selectedCategory)}',
+                      style: const TextStyle(fontSize: 12, color: Colors.white70),
                     ),
                   ],
                 ),
@@ -273,6 +331,21 @@ class _MyHomePageState extends State<MyHomePage> {
         ),
       ),
     );
+  }
+  
+  String _getCategoryDisplayName(String category) {
+    switch (category) {
+      case 'DATA':
+        return 'Paket Data';
+      case 'VOICE_SMS':
+        return 'Paket Nelpon & SMS';
+      case 'ROAMING':
+        return 'Roaming & Haji';
+      case 'DIGITAL_GAME':
+        return 'Digital & Game';
+      default:
+        return category;
+    }
   }
 }
 
