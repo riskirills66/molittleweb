@@ -416,28 +416,37 @@ class _MyHomePageState extends State<MyHomePage> {
               if (_subCategories.isNotEmpty)
                 Padding(
                   padding: const EdgeInsets.symmetric(vertical: 8.0),
-                  child: SizedBox(
-                    height: 50,
+                  child: Container(
+                    height: 30,
+                    alignment: Alignment.center, // Center alignment to prevent cutting
                     child: ListView.builder(
                       scrollDirection: Axis.horizontal,
                       itemCount: _subCategories.length,
                       padding: const EdgeInsets.symmetric(horizontal: 16.0),
+                      clipBehavior: Clip.none, // Disable clipping
                       itemBuilder: (context, index) {
                         final subCategory = _subCategories[index];
                         final isSelected = _selectedSubCategory == subCategory;
                         
                         return Padding(
-                          padding: const EdgeInsets.only(right: 8.0),
-                          child: ElevatedButton(
-                            style: ElevatedButton.styleFrom(
-                              backgroundColor: isSelected ? Colors.red : Colors.white,
-                              foregroundColor: isSelected ? Colors.white : Colors.red,
-                              shape: RoundedRectangleBorder(
-                                borderRadius: BorderRadius.circular(20),
+                          padding: const EdgeInsets.only(right: 10.0),
+                          child: Center( // Wrap button in Center widget
+                            child: ElevatedButton(
+                              style: ElevatedButton.styleFrom(
+                                backgroundColor: isSelected ? Colors.red : Colors.white,
+                                foregroundColor: isSelected ? Colors.white : Colors.red,
+                                padding: const EdgeInsets.symmetric(horizontal: 24.0),
+                                shape: RoundedRectangleBorder(
+                                  borderRadius: BorderRadius.circular(20),
+                                ),
+                                visualDensity: VisualDensity.compact,
+                                tapTargetSize: MaterialTapTargetSize.shrinkWrap,
+                                fixedSize: const Size.fromHeight(36), // Use fixedSize instead
+                                elevation: 0,
                               ),
+                              onPressed: () => _filterPackages(subCategory),
+                              child: Text(subCategory),
                             ),
-                            onPressed: () => _filterPackages(subCategory),
-                            child: Text(subCategory),
                           ),
                         );
                       },
