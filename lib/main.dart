@@ -684,7 +684,18 @@ class PackageCard extends StatelessWidget {
                     backgroundColor: Colors.red,
                     foregroundColor: Colors.white,
                   ),
-                  onPressed: () {
+                  onPressed: () async {
+                    // Copy inv_id to clipboard
+                    await Clipboard.setData(ClipboardData(text: response.data['inv_id']?.toString() ?? 'Tidak tersedia'));
+                    
+                    // Show confirmation message
+                    ScaffoldMessenger.of(context).showSnackBar(
+                      const SnackBar(
+                        content: Text('Kode pembayaran telah disalin'),
+                        duration: Duration(seconds: 2),
+                      ),
+                    );
+                    
                     Navigator.of(context).pop();
                   },
                   child: const Text('Lanjutkan'),
