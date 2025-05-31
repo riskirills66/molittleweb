@@ -403,43 +403,49 @@ class _MyHomePageState extends State<MyHomePage> {
                       ),
                     if (_subCategories.isNotEmpty)
                       Padding(
-                        padding: const EdgeInsets.symmetric(vertical: 8.0),
-                        child: Container(
-                          height: 30,
-                          alignment: Alignment.center,
-                          child: ListView.builder(
-                            scrollDirection: Axis.horizontal,
-                            itemCount: _subCategories.length,
-                            padding: const EdgeInsets.symmetric(horizontal: 16.0),
-                            clipBehavior: Clip.none,
-                            itemBuilder: (context, index) {
-                              final subCategory = _subCategories[index];
-                              final isSelected = _selectedSubCategory == subCategory;
-                              
-                              return Padding(
-                                padding: const EdgeInsets.only(right: 10.0),
-                                child: Center(
-                                  child: ElevatedButton(
-                                    style: ElevatedButton.styleFrom(
-                                      backgroundColor: isSelected ? Colors.red : Colors.white,
-                                      foregroundColor: isSelected ? Colors.white : Colors.red,
-                                      padding: const EdgeInsets.symmetric(horizontal: 24.0),
-                                      shape: RoundedRectangleBorder(
-                                        borderRadius: BorderRadius.circular(20),
-                                      ),
-                                      visualDensity: VisualDensity.compact,
-                                      tapTargetSize: MaterialTapTargetSize.shrinkWrap,
-                                      fixedSize: const Size.fromHeight(36),
-                                      elevation: 0,
-                                    ),
-                                    onPressed: () => _filterPackages(subCategory),
-                                    child: Text(subCategory),
+                      padding: const EdgeInsets.symmetric(vertical: 8.0),
+                      child: Container(
+                        height: 30,
+                        alignment: Alignment.center,
+                        child: ListView.builder(
+                        scrollDirection: Axis.horizontal,
+                        itemCount: _subCategories.length,
+                        padding: const EdgeInsets.symmetric(horizontal: 16.0),
+                        clipBehavior: Clip.none,
+                        itemBuilder: (context, index) {
+                          final subCategory = _subCategories[index];
+                          final isSelected = _selectedSubCategory == subCategory;
+
+                          return Padding(
+                          padding: const EdgeInsets.only(right: 10.0),
+                          child: Center(
+                            child: ElevatedButton(
+                            style: ElevatedButton.styleFrom(
+                              backgroundColor: isSelected ? Colors.red : Colors.white,
+                              foregroundColor: isSelected ? Colors.white : Colors.red,
+                              padding: const EdgeInsets.symmetric(horizontal: 24.0),
+                              shape: RoundedRectangleBorder(
+                              borderRadius: BorderRadius.circular(20),
+                              side: isSelected
+                                ? BorderSide.none
+                                : const BorderSide(
+                                  color: Color.fromARGB(255, 165, 11, 0),
+                                  width: 1.0,
                                   ),
-                                ),
-                              );
-                            },
+                              ),
+                              visualDensity: VisualDensity.compact,
+                              tapTargetSize: MaterialTapTargetSize.shrinkWrap,
+                              fixedSize: const Size.fromHeight(36),
+                              elevation: 0,
+                            ),
+                            onPressed: () => _filterPackages(subCategory),
+                            child: Text(subCategory),
+                            ),
                           ),
+                          );
+                        },
                         ),
+                      ),
                       ),
                     if (_filteredPackages.isNotEmpty)
                       Padding(
@@ -474,6 +480,13 @@ class PackageCard extends StatelessWidget {
     return Card(
       margin: const EdgeInsets.only(bottom: 16),
       elevation: 4,
+      shape: RoundedRectangleBorder(
+        borderRadius: BorderRadius.circular(8),
+        side: const BorderSide(
+          color: Color.fromARGB(255, 165, 11, 0),
+          width: 1.0,
+        ),
+      ),
       child: Padding(
         padding: const EdgeInsets.all(16.0),
         child: Column(
@@ -482,14 +495,9 @@ class PackageCard extends StatelessWidget {
             Text(
               package['product_name'] ?? 'Nama Paket Tidak Tersedia',
               style: const TextStyle(
-                fontSize: 16,
+                fontSize: 14,
                 fontWeight: FontWeight.bold,
               ),
-            ),
-            const SizedBox(height: 8),
-            Text(
-              'Kategori: ${package['kategori'] ?? 'Tidak tersedia'}',
-              style: const TextStyle(fontSize: 14),
             ),
             const SizedBox(height: 4),
             Text(
