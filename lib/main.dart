@@ -233,23 +233,47 @@ class _MyHomePageState extends State<MyHomePage> {
               children: [
                 TextField(
                   controller: _phoneController,
-                  decoration: const InputDecoration(
-                    border: OutlineInputBorder(
+                  decoration: InputDecoration(
+                    border: const OutlineInputBorder(
                       borderRadius: BorderRadius.all(Radius.circular(20.0)),
                     ),
-                    enabledBorder: OutlineInputBorder(
+                    enabledBorder: const OutlineInputBorder(
                       borderRadius: BorderRadius.all(Radius.circular(20.0)),
                       borderSide: BorderSide(color: Colors.grey),
                     ),
-                    focusedBorder: OutlineInputBorder(
+                    focusedBorder: const OutlineInputBorder(
                       borderRadius: BorderRadius.all(Radius.circular(20.0)),
                       borderSide: BorderSide(color: Colors.red),
                     ),
                     hintText: 'Masukkan Nomor',
-                    prefixIcon: Icon(Icons.phone),
+                    prefixIcon: const Padding(
+                      padding: EdgeInsets.only(left: 15.0),
+                      child: Icon(Icons.phone),
+                    ),
+                    suffixIcon: Padding(
+                      padding: const EdgeInsets.only(right: 10.0),
+                      child: IconButton(
+                      icon: const Icon(Icons.refresh, color: Colors.grey),
+                      onPressed: () {
+                        setState(() {
+                        _phoneController.clear();
+                        _packages = [];
+                        _filteredPackages = [];
+                        _subCategories = [];
+                        _selectedSubCategory = null;
+                        _isLoading = false;
+                        _errorMessage = '';
+                        _selectedCategory = 'DATA';
+                        _currentListType = 'listTerbaik';
+                        });
+                      },
+                      padding: const EdgeInsets.all(8.0),
+                      constraints: const BoxConstraints(),
+                      ),
+                    ),
                     filled: true,
                     fillColor: Colors.white,
-                    contentPadding: EdgeInsets.symmetric(vertical: 8.0),
+                    contentPadding: const EdgeInsets.symmetric(vertical: 8.0),
                   ),
                   keyboardType: TextInputType.phone,
                   inputFormatters: [
