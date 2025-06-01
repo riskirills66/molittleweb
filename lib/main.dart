@@ -781,6 +781,9 @@ class PackageCard extends StatelessWidget {
         },
       );
 
+      // Check if widget is still mounted before using context
+      if (!context.mounted) return;
+
       // Close loading dialog
       Navigator.of(context).pop();
 
@@ -901,23 +904,29 @@ class PackageCard extends StatelessWidget {
                         if (await canLaunchUrl(uri)) {
                           await launchUrl(uri, mode: LaunchMode.externalApplication);
                         } else {
+                          if (context.mounted) {
+                            ScaffoldMessenger.of(context).showSnackBar(
+                              const SnackBar(
+                                content: Text('Tidak dapat membuka link'),
+                                duration: Duration(seconds: 2),
+                              ),
+                            );
+                          }
+                        }
+                      } catch (e) {
+                        if (context.mounted) {
                           ScaffoldMessenger.of(context).showSnackBar(
-                            const SnackBar(
-                              content: Text('Tidak dapat membuka link'),
+                            SnackBar(
+                              content: Text('Error membuka link: $e'),
                               duration: Duration(seconds: 2),
                             ),
                           );
                         }
-                      } catch (e) {
-                        ScaffoldMessenger.of(context).showSnackBar(
-                          SnackBar(
-                            content: Text('Error membuka link: $e'),
-                            duration: Duration(seconds: 2),
-                          ),
-                        );
                       }
                       
-                      Navigator.of(context).pop();
+                      if (context.mounted) {
+                        Navigator.of(context).pop();
+                      }
                     },
                     child: const Text('Lanjutkan'),
                   ),
@@ -927,18 +936,22 @@ class PackageCard extends StatelessWidget {
           },
         );
       } else {
-        // Close loading dialog and show error
-        Navigator.of(context).pop();
-        ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(content: Text('Error: ${response.statusCode} - ${response.data}')),
-        );
+        // Check if widget is still mounted before using context
+        if (context.mounted) {
+          ScaffoldMessenger.of(context).showSnackBar(
+            SnackBar(content: Text('Error: ${response.statusCode} - ${response.data}')),
+          );
+        }
       }
     } catch (e) {
-      // Close loading dialog and show error
-      Navigator.of(context).pop();
-      ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(content: Text('Network error: $e')),
-      );
+      // Check if widget is still mounted before using context
+      if (context.mounted) {
+        // Close loading dialog
+        Navigator.of(context).pop();
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(content: Text('Network error: $e')),
+        );
+      }
     }
   }
 
