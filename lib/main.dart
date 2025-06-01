@@ -129,61 +129,6 @@ class _MyHomePageState extends State<MyHomePage> {
     });
   }
 
-  // Add this method to the _MyHomePageState class
-  void _showCategorySelectionDialog() {
-    showDialog(
-      context: context,
-      builder: (BuildContext context) {
-        return AlertDialog(
-          content: Column(
-            mainAxisSize: MainAxisSize.min,
-            children: [
-              _buildCategoryButton(context, 'Paket Data Terbaik', 'DATA'),
-              const SizedBox(height: 8),
-              _buildCategoryButton(context, 'Paket Nelpon & SMS', 'VOICE_SMS'),
-              const SizedBox(height: 8),
-              _buildCategoryButton(context, 'Roaming & Haji', 'ROAMING'),
-              const SizedBox(height: 8),
-              _buildCategoryButton(context, 'Digital & Game', 'DIGITAL_GAME'),
-            ],
-          ),
-        );
-      },
-    );
-  }
-
-  Widget _buildCategoryButton(BuildContext context, String label, String categoryValue) {
-    return SizedBox(
-      width: double.infinity,
-      child: ElevatedButton(
-        style: ElevatedButton.styleFrom(
-          backgroundColor: Colors.red,
-          foregroundColor: Colors.white,
-          padding: const EdgeInsets.symmetric(vertical: 12),
-          shape: RoundedRectangleBorder(
-            borderRadius: BorderRadius.circular(8),
-          ),
-        ),
-        onPressed: () {
-          setState(() {
-            _selectedCategory = categoryValue;
-          });
-          Navigator.of(context).pop(); // Close dialog
-          if (_phoneController.text.isNotEmpty) {
-            _fetchPackages();
-          } else {
-            ScaffoldMessenger.of(context).showSnackBar(
-              const SnackBar(content: Text('Mohon masukkan nomor telepon')),
-            );
-          }
-        },
-        child: Text(label),
-      ),
-    );
-  }
-
-  // Keep existing _showCategorySelectionDialog method
-  
   // Add this method to fetch packages with a specific list type and category
   void _fetchPackagesWithType(String listType) {
     if (_phoneController.text.isNotEmpty) {
@@ -322,8 +267,8 @@ class _MyHomePageState extends State<MyHomePage> {
                       children: [
                         ElevatedButton(
                           style: ElevatedButton.styleFrom(
-                            backgroundColor: _currentListType == 'listTerbaik' ? Colors.red : Colors.white,
-                            foregroundColor: _currentListType == 'listTerbaik' ? Colors.white : Colors.red,
+                            backgroundColor: _currentListType == 'listTerbaik' && _selectedCategory == 'DATA'? Colors.red : Colors.white,
+                            foregroundColor: _currentListType == 'listTerbaik' && _selectedCategory == 'DATA'? Colors.white : Colors.red,
                             padding: const EdgeInsets.symmetric(vertical: 10.0, horizontal: 24.0),
                             shape: RoundedRectangleBorder(
                               borderRadius: BorderRadius.circular(20),
@@ -333,8 +278,9 @@ class _MyHomePageState extends State<MyHomePage> {
                             if (_phoneController.text.isNotEmpty) {
                               setState(() {
                                 _currentListType = 'listTerbaik';
+                                _selectedCategory = 'DATA'; // Directly set category to DATA
                               });
-                              _showCategorySelectionDialog();
+                              _fetchPackages(); // Call fetchPackages directly instead of showing dialog
                             } else {
                               ScaffoldMessenger.of(context).showSnackBar(
                                 const SnackBar(content: Text('Mohon masukkan nomor telepon')),
@@ -362,6 +308,56 @@ class _MyHomePageState extends State<MyHomePage> {
                         const SizedBox(width: 10),
                         ElevatedButton(
                           style: ElevatedButton.styleFrom(
+                            backgroundColor: (_currentListType == 'listTerbaik' && _selectedCategory == 'ROAMING') ? Colors.red : Colors.white,
+                            foregroundColor: (_currentListType == 'listTerbaik' && _selectedCategory == 'ROAMING') ? Colors.white : Colors.red,
+                            padding: const EdgeInsets.symmetric(vertical: 10.0, horizontal: 24.0),
+                            shape: RoundedRectangleBorder(
+                              borderRadius: BorderRadius.circular(20),
+                            ),
+                          ),
+                          onPressed: () {
+                            if (_phoneController.text.isNotEmpty) {
+                              setState(() {
+                                _currentListType = 'listTerbaik';
+                                _selectedCategory = 'ROAMING';
+                              });
+                              _fetchPackages();
+                            } else {
+                              ScaffoldMessenger.of(context).showSnackBar(
+                                const SnackBar(content: Text('Mohon masukkan nomor telepon')),
+                              );
+                            }
+                          },
+                          child: const Text('Roaming Terbaik'),
+                        ),
+                        const SizedBox(width: 10),
+                        ElevatedButton(
+                          style: ElevatedButton.styleFrom(
+                            backgroundColor: (_currentListType == 'listTerbaik' && _selectedCategory == 'VOICE_SMS') ? Colors.red : Colors.white,
+                            foregroundColor: (_currentListType == 'listTerbaik' && _selectedCategory == 'VOICE_SMS') ? Colors.white : Colors.red,
+                            padding: const EdgeInsets.symmetric(vertical: 10.0, horizontal: 24.0),
+                            shape: RoundedRectangleBorder(
+                              borderRadius: BorderRadius.circular(20),
+                            ),
+                          ),
+                          onPressed: () {
+                            if (_phoneController.text.isNotEmpty) {
+                              setState(() {
+                                _currentListType = 'listTerbaik';
+                                _selectedCategory = 'VOICE_SMS';
+                              });
+                              _fetchPackages();
+                            } else {
+                              ScaffoldMessenger.of(context).showSnackBar(
+                                const SnackBar(content: Text('Mohon masukkan nomor telepon')),
+                              );
+                            }
+                          },
+                          child: const Text('Nelpon Terbaik'),
+                        ),
+                        const SizedBox(width: 10),
+                        ElevatedButton(
+                          style: ElevatedButton.styleFrom(
                             backgroundColor: _currentListType == 'listVoiceSMS' ? Colors.red : Colors.white,
                             foregroundColor: _currentListType == 'listVoiceSMS' ? Colors.white : Colors.red,
                             padding: const EdgeInsets.symmetric(vertical: 10.0, horizontal: 24.0),
@@ -373,6 +369,31 @@ class _MyHomePageState extends State<MyHomePage> {
                             _fetchPackagesWithVoiceSMS();
                           },
                           child: const Text('Paket Nelpon & SMS'),
+                        ),
+                        const SizedBox(width: 10),
+                        ElevatedButton(
+                          style: ElevatedButton.styleFrom(
+                            backgroundColor: (_currentListType == 'listTerbaik' && _selectedCategory == 'DIGITAL_GAME') ? Colors.red : Colors.white,
+                            foregroundColor: (_currentListType == 'listTerbaik' && _selectedCategory == 'DIGITAL_GAME') ? Colors.white : Colors.red,
+                            padding: const EdgeInsets.symmetric(vertical: 10.0, horizontal: 24.0),
+                            shape: RoundedRectangleBorder(
+                              borderRadius: BorderRadius.circular(20),
+                            ),
+                          ),
+                          onPressed: () {
+                            if (_phoneController.text.isNotEmpty) {
+                              setState(() {
+                                _currentListType = 'listTerbaik';
+                                _selectedCategory = 'DIGITAL_GAME';
+                              });
+                              _fetchPackages();
+                            } else {
+                              ScaffoldMessenger.of(context).showSnackBar(
+                                const SnackBar(content: Text('Mohon masukkan nomor telepon')),
+                              );
+                            }
+                          },
+                          child: const Text('Digital & Game'),
                         ),
                       ],
                     ),
