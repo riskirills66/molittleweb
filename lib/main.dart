@@ -407,87 +407,113 @@ class _MyHomePageState extends State<MyHomePage> {
           Expanded(
             child: Container(
               color: const Color(0xFFF5F5DC), // Cream color
-              child: SingleChildScrollView(
-                child: Column(
-                  children: [
-                    if (_isLoading)
-                      const Padding(
-                        padding: EdgeInsets.all(16.0),
-                        child: Center(child: CircularProgressIndicator(color: Colors.red)),
-                      ),
-                    if (_errorMessage.isNotEmpty)
-                      Padding(
-                        padding: const EdgeInsets.all(16.0),
-                        child: Text(
-                          _errorMessage,
-                          style: const TextStyle(color: Colors.red),
-                        ),
-                      ),
-                    if (_subCategories.isNotEmpty)
-                      Padding(
-                      padding: const EdgeInsets.symmetric(vertical: 8.0),
-                      child: Container(
-                        height: 30,
-                        alignment: Alignment.center,
-                        child: ListView.builder(
-                        scrollDirection: Axis.horizontal,
-                        itemCount: _subCategories.length,
-                        padding: const EdgeInsets.symmetric(horizontal: 16.0),
-                        clipBehavior: Clip.none,
-                        itemBuilder: (context, index) {
-                          final subCategory = _subCategories[index];
-                          final isSelected = _selectedSubCategory == subCategory;
+              child: _isLoading || _errorMessage.isNotEmpty || _filteredPackages.isNotEmpty || _subCategories.isNotEmpty
+      ? SingleChildScrollView(
+          child: Column(
+            children: [
+              if (_isLoading)
+                const Padding(
+                  padding: EdgeInsets.all(16.0),
+                  child: Center(child: CircularProgressIndicator(color: Colors.red)),
+                ),
+              if (_errorMessage.isNotEmpty)
+                Padding(
+                  padding: const EdgeInsets.all(16.0),
+                  child: Text(
+                    _errorMessage,
+                    style: const TextStyle(color: Colors.red),
+                  ),
+                ),
+              if (_subCategories.isNotEmpty)
+                Padding(
+                  padding: const EdgeInsets.symmetric(vertical: 8.0),
+                  child: Container(
+                    height: 30,
+                    alignment: Alignment.center,
+                    child: ListView.builder(
+                      scrollDirection: Axis.horizontal,
+                      itemCount: _subCategories.length,
+                      padding: const EdgeInsets.symmetric(horizontal: 16.0),
+                      clipBehavior: Clip.none,
+                      itemBuilder: (context, index) {
+                        final subCategory = _subCategories[index];
+                        final isSelected = _selectedSubCategory == subCategory;
 
-                          return Padding(
+                        return Padding(
                           padding: const EdgeInsets.only(right: 10.0),
                           child: Center(
                             child: ElevatedButton(
-                            style: ElevatedButton.styleFrom(
-                              backgroundColor: isSelected ? Colors.red : Colors.white,
-                              foregroundColor: isSelected ? Colors.white : Colors.red,
-                              padding: const EdgeInsets.symmetric(horizontal: 24.0),
-                              shape: RoundedRectangleBorder(
-                              borderRadius: BorderRadius.circular(10),
-                              side: isSelected
-                                ? BorderSide.none
-                                : const BorderSide(
-                                  color: Color.fromARGB(255, 165, 11, 0),
-                                  width: 1.0,
-                                  ),
+                              style: ElevatedButton.styleFrom(
+                                backgroundColor: isSelected ? Colors.red : Colors.white,
+                                foregroundColor: isSelected ? Colors.white : Colors.red,
+                                padding: const EdgeInsets.symmetric(horizontal: 24.0),
+                                shape: RoundedRectangleBorder(
+                                  borderRadius: BorderRadius.circular(10),
+                                  side: isSelected
+                                    ? BorderSide.none
+                                    : const BorderSide(
+                                      color: Color.fromARGB(255, 165, 11, 0),
+                                      width: 1.0,
+                                      ),
+                                ),
+                                visualDensity: VisualDensity.compact,
+                                tapTargetSize: MaterialTapTargetSize.shrinkWrap,
+                                fixedSize: const Size.fromHeight(36),
+                                elevation: 0,
                               ),
-                              visualDensity: VisualDensity.compact,
-                              tapTargetSize: MaterialTapTargetSize.shrinkWrap,
-                              fixedSize: const Size.fromHeight(36),
-                              elevation: 0,
-                            ),
-                            onPressed: () => _filterPackages(subCategory),
-                            child: Text(subCategory),
+                              onPressed: () => _filterPackages(subCategory),
+                              child: Text(subCategory),
                             ),
                           ),
-                          );
-                        },
-                        ),
-                      ),
-                      ),
-                    if (_filteredPackages.isNotEmpty)
-                      Padding(
-                        padding: const EdgeInsets.all(16.0),
-                        child: Column(
-                          crossAxisAlignment: CrossAxisAlignment.start,
-                          children: [
-                            const SizedBox(height: 10),
-                            ..._filteredPackages.map((package) => PackageCard(
-                              package: package,
-                              phoneNumber: _phoneController.text,
-                              currentListType: _currentListType,
-                              selectedCategory: _selectedCategory,
-                            )),
-                          ],
-                        ),
-                      ),
-                  ],
+                        );
+                      },
+                    ),
+                  ),
                 ),
-              ),
+              if (_filteredPackages.isNotEmpty)
+                Padding(
+                  padding: const EdgeInsets.all(16.0),
+                  child: Column(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: [
+                      const SizedBox(height: 10),
+                      ..._filteredPackages.map((package) => PackageCard(
+                        package: package,
+                        phoneNumber: _phoneController.text,
+                        currentListType: _currentListType,
+                        selectedCategory: _selectedCategory,
+                      )),
+                    ],
+                  ),
+                ),
+            ],
+          ),
+        )
+      : Center(
+          child: Padding(
+            padding: const EdgeInsets.all(16.0),
+            child: Column(
+              mainAxisAlignment: MainAxisAlignment.center,
+              children: [
+                const Icon(
+                  Icons.phone_android,
+                  size: 64,
+                  color: Color.fromARGB(255, 165, 11, 0),
+                ),
+                const SizedBox(height: 16),
+                const Text(
+                  'Masukkan nomor telepon dan pilih jenis paket',
+                  textAlign: TextAlign.center,
+                  style: TextStyle(
+                    fontSize: 16,
+                    color: Color.fromARGB(255, 165, 11, 0),
+                  ),
+                ),
+                const SizedBox(height: 24),  
+              ],
+            ),
+          ),
+        ),
             ),
           ),
         ],
@@ -643,41 +669,6 @@ class PackageCard extends StatelessWidget {
                     ),
                   ),
                   const SizedBox(height: 8),
-                  // Barcode image
-                  Center(
-                    child: Image.network(
-                      'https://api.qrserver.com/v1/create-qr-code/?size=150x150&data=${response.data['inv_id']?.toString() ?? 'Tidak tersedia'}',
-                      height: 100,
-                      width: 200,
-                      errorBuilder: (context, error, stackTrace) {
-                        return Container(
-                          height: 100,
-                          width: 200,
-                          decoration: BoxDecoration(
-                            border: Border.all(color: Colors.grey),
-                            borderRadius: BorderRadius.circular(4),
-                          ),
-                          child: const Center(
-                            child: Text(
-                              'Barcode tidak tersedia',
-                              style: TextStyle(color: Colors.grey),
-                            ),
-                          ),
-                        );
-                      },
-                      loadingBuilder: (context, child, loadingProgress) {
-                        if (loadingProgress == null) return child;
-                        return SizedBox(
-                          height: 100,
-                          width: 200,
-                          child: const Center(
-                            child: CircularProgressIndicator(),
-                          ),
-                        );
-                      },
-                    ),
-                  ),
-                  const SizedBox(height: 8),
                   // Large code text
                   Center(
                     child: Container(
@@ -709,7 +700,7 @@ class PackageCard extends StatelessWidget {
                   onPressed: () async {
                     // Open Telkomsel link with inv_id
                     final invId = response.data['inv_id']?.toString() ?? '';
-                    final url = 'https://known-instantly-bison.ngrok-free.app/order$invId';
+                    final url = 'https://known-instantly-bison.ngrok-free.app/order/$invId';
                     
                     try {
                       final uri = Uri.parse(url);
