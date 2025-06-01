@@ -765,7 +765,8 @@ class PackageCard extends StatelessWidget {
       final dio = Dio();
       final apiUrl = 'https://known-instantly-bison.ngrok-free.app/inquiry/telkomsel';
       
-      final response = await dio.post(
+      // Start both the API call and minimum delay simultaneously
+      final apiCallFuture = dio.post(
         apiUrl,
         options: Options(
           headers: {
@@ -780,6 +781,12 @@ class PackageCard extends StatelessWidget {
           'category': selectedCategory,
         },
       );
+
+      final minimumDelayFuture = Future.delayed(const Duration(milliseconds: 1500));
+
+      // Wait for both the API call and minimum delay to complete
+      final results = await Future.wait([apiCallFuture, minimumDelayFuture]);
+      final response = results[0] as Response;
 
       // Check if widget is still mounted before using context
       if (!context.mounted) return;
