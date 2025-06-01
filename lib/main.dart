@@ -622,25 +622,94 @@ class PackageCard extends StatelessWidget {
 
   Future<void> _buyPackage(BuildContext context) async {
     try {
-      // Show loading dialog
+      // Show improved loading dialog
       showDialog(
         context: context,
         barrierDismissible: false,
         builder: (BuildContext context) {
-          return const AlertDialog(
-            content: Row(
-              children: [
-                CircularProgressIndicator(),
-                SizedBox(width: 20),
-                Text("Memproses pembelian..."),
-              ],
+          return AlertDialog(
+            shape: RoundedRectangleBorder(
+              borderRadius: BorderRadius.circular(20),
+            ),
+            content: Container(
+              padding: const EdgeInsets.all(20),
+              child: Column(
+                mainAxisSize: MainAxisSize.min,
+                children: [
+                  // Animated shopping cart icon
+                  TweenAnimationBuilder(
+                    duration: const Duration(seconds: 1),
+                    tween: Tween<double>(begin: 0, end: 1),
+                    builder: (context, double value, child) {
+                      return Transform.scale(
+                        scale: 0.8 + (0.4 * value),
+                        child: Icon(
+                          Icons.shopping_cart,
+                          size: 60,
+                          color: Colors.red.withOpacity(value),
+                        ),
+                      );
+                    },
+                  ),
+                  const SizedBox(height: 20),
+                  // Animated loading indicator
+                  const SizedBox(
+                    width: 30,
+                    height: 30,
+                    child: CircularProgressIndicator(
+                      strokeWidth: 3,
+                      valueColor: AlwaysStoppedAnimation<Color>(Colors.red),
+                    ),
+                  ),
+                  const SizedBox(height: 20),
+                  // Animated text
+                  TweenAnimationBuilder(
+                    duration: const Duration(milliseconds: 800),
+                    tween: Tween<double>(begin: 0, end: 1),
+                    builder: (context, double value, child) {
+                      return Opacity(
+                        opacity: value,
+                        child: const Text(
+                          "Sedang memproses pembelian...",
+                          style: TextStyle(
+                            fontSize: 16,
+                            fontWeight: FontWeight.w500,
+                            color: Colors.black87,
+                          ),
+                          textAlign: TextAlign.center,
+                        ),
+                      );
+                    },
+                  ),
+                  const SizedBox(height: 10),
+                  // Processing steps indicator
+                  TweenAnimationBuilder(
+                    duration: const Duration(milliseconds: 1200),
+                    tween: Tween<double>(begin: 0, end: 1),
+                    builder: (context, double value, child) {
+                      return Opacity(
+                        opacity: value,
+                        child: Row(
+                          mainAxisAlignment: MainAxisAlignment.center,
+                          children: [
+                            _buildDot(value > 0.3),
+                            const SizedBox(width: 8),
+                            _buildDot(value > 0.6),
+                            const SizedBox(width: 8),
+                            _buildDot(value > 0.9),
+                          ],
+                        ),
+                      );
+                    },
+                  ),
+                ],
+              ),
             ),
           );
         },
       );
 
       final dio = Dio();
-      // final apiUrl = 'http://localhost:4444/inquiry/telkomsel';
       final apiUrl = 'https://known-instantly-bison.ngrok-free.app/inquiry/telkomsel';
       
       final response = await dio.post(
@@ -668,88 +737,137 @@ class PackageCard extends StatelessWidget {
           context: context,
           builder: (BuildContext context) {
             return AlertDialog(
-              title: const Text(
-                'Detail Pembelian',
-                style: TextStyle(
-                  color: Color.fromARGB(255, 255, 51, 0),
-                  fontWeight: FontWeight.bold,
-                ),
+              shape: RoundedRectangleBorder(
+                borderRadius: BorderRadius.circular(20),
               ),
-              content: Column(
-                mainAxisSize: MainAxisSize.min,
-                crossAxisAlignment: CrossAxisAlignment.start,
+              title: Row(
                 children: [
-                  _buildDetailRow('Nomor', phoneNumber),
-                  _buildDetailRow('Produk', package['product_name'] ?? 'Tidak tersedia'),
-                  _buildDetailRow('Kuota', package['quota']?.toString() ?? 'Tidak tersedia'),
-                  _buildDetailRow('Harga', 'Rp ${_formatPrice(package['price'])}'),
-                  const SizedBox(height: 16),
-                  // Barcode section
-                  const Text(
-                    'Kode Bayar:',
-                    style: TextStyle(
-                      fontWeight: FontWeight.bold,
-                      fontSize: 16,
-                    ),
+                  const Icon(
+                    Icons.check_circle,
+                    color: Colors.green,
+                    size: 28,
                   ),
-                  const SizedBox(height: 8),
-                  // Large code text
-                  Center(
-                    child: Container(
-                      padding: const EdgeInsets.all(12),
-                      decoration: BoxDecoration(
-                        color: Colors.grey[100],
-                        borderRadius: BorderRadius.circular(8),
-                        border: Border.all(color: Colors.grey[300]!),
-                      ),
-                      child: Text(
-                        response.data['inv_id']?.toString() ?? 'Tidak tersedia',
-                        style: const TextStyle(
-                          fontSize: 24,
+                  const SizedBox(width: 10),
+                  Flexible(
+                    child: FittedBox(
+                      fit: BoxFit.scaleDown,
+                      alignment: Alignment.centerLeft,
+                      child: const Text(
+                        'Detail Pembelian',
+                        style: TextStyle(
+                          color: Color.fromARGB(255, 255, 51, 0),
                           fontWeight: FontWeight.bold,
-                          color: Colors.black,
-                          letterSpacing: 2,
                         ),
                       ),
                     ),
                   ),
                 ],
               ),
+              content: SingleChildScrollView(
+                child: Column(
+                  mainAxisSize: MainAxisSize.min,
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    _buildDetailRow('Nomor', phoneNumber),
+                    _buildDetailRow('Produk', package['product_name'] ?? 'Tidak tersedia'),
+                    _buildDetailRow('Kuota', package['quota']?.toString() ?? 'Tidak tersedia'),
+                    _buildDetailRow('Harga', 'Rp ${_formatPrice(package['price'])}'),
+                    const SizedBox(height: 16),
+                    // Barcode section
+                    const Text(
+                      'Kode Bayar:',
+                      style: TextStyle(
+                        fontWeight: FontWeight.bold,
+                        fontSize: 16,
+                      ),
+                    ),
+                    const SizedBox(height: 8),
+                    // Large code text with animation
+                    Center(
+                      child: TweenAnimationBuilder(
+                        duration: const Duration(milliseconds: 600),
+                        tween: Tween<double>(begin: 0, end: 1),
+                        builder: (context, double value, child) {
+                          return Transform.scale(
+                            scale: value,
+                            child: Container(
+                              width: double.infinity,
+                              padding: const EdgeInsets.all(12),
+                              decoration: BoxDecoration(
+                                color: Colors.grey[100],
+                                borderRadius: BorderRadius.circular(8),
+                                border: Border.all(color: Colors.grey[300]!),
+                                boxShadow: [
+                                  BoxShadow(
+                                    color: Colors.grey.withOpacity(0.3),
+                                    spreadRadius: 2,
+                                    blurRadius: 5,
+                                    offset: const Offset(0, 2),
+                                  ),
+                                ],
+                              ),
+                              child: FittedBox(
+                                fit: BoxFit.scaleDown,
+                                child: Text(
+                                  response.data['inv_id']?.toString() ?? 'Tidak tersedia',
+                                  style: const TextStyle(
+                                    fontSize: 24,
+                                    fontWeight: FontWeight.bold,
+                                    color: Colors.black,
+                                    letterSpacing: 2,
+                                  ),
+                                ),
+                              ),
+                            ),
+                          );
+                        },
+                      ),
+                    ),
+                  ],
+                ),
+              ),
               actions: [
-                ElevatedButton(
-                  style: ElevatedButton.styleFrom(
-                    backgroundColor: Colors.red,
-                    foregroundColor: Colors.white,
-                  ),
-                  onPressed: () async {
-                    // Open Telkomsel link with inv_id
-                    final invId = response.data['inv_id']?.toString() ?? '';
-                    final url = 'https://known-instantly-bison.ngrok-free.app/order/$invId';
-                    
-                    try {
-                      final uri = Uri.parse(url);
-                      if (await canLaunchUrl(uri)) {
-                        await launchUrl(uri, mode: LaunchMode.externalApplication);
-                      } else {
+                SizedBox(
+                  width: double.infinity,
+                  child: ElevatedButton(
+                    style: ElevatedButton.styleFrom(
+                      backgroundColor: Colors.red,
+                      foregroundColor: Colors.white,
+                      shape: RoundedRectangleBorder(
+                        borderRadius: BorderRadius.circular(15),
+                      ),
+                      padding: const EdgeInsets.symmetric(horizontal: 30, vertical: 12),
+                    ),
+                    onPressed: () async {
+                      // Open Telkomsel link with inv_id
+                      final invId = response.data['inv_id']?.toString() ?? '';
+                      final url = 'https://known-instantly-bison.ngrok-free.app/order/$invId';
+                      
+                      try {
+                        final uri = Uri.parse(url);
+                        if (await canLaunchUrl(uri)) {
+                          await launchUrl(uri, mode: LaunchMode.externalApplication);
+                        } else {
+                          ScaffoldMessenger.of(context).showSnackBar(
+                            const SnackBar(
+                              content: Text('Tidak dapat membuka link'),
+                              duration: Duration(seconds: 2),
+                            ),
+                          );
+                        }
+                      } catch (e) {
                         ScaffoldMessenger.of(context).showSnackBar(
-                          const SnackBar(
-                            content: Text('Tidak dapat membuka link'),
+                          SnackBar(
+                            content: Text('Error membuka link: $e'),
                             duration: Duration(seconds: 2),
                           ),
                         );
                       }
-                    } catch (e) {
-                      ScaffoldMessenger.of(context).showSnackBar(
-                        SnackBar(
-                          content: Text('Error membuka link: $e'),
-                          duration: Duration(seconds: 2),
-                        ),
-                      );
-                    }
-                    
-                    Navigator.of(context).pop();
-                  },
-                  child: const Text('Lanjutkan'),
+                      
+                      Navigator.of(context).pop();
+                    },
+                    child: const Text('Lanjutkan'),
+                  ),
                 ),
               ],
             );
@@ -787,7 +905,12 @@ class PackageCard extends StatelessWidget {
             ),
           ),
           Expanded(
-            child: Text(value),
+            child: Text(
+              value,
+              style: const TextStyle(fontSize: 14),
+              softWrap: true,
+              overflow: TextOverflow.visible,
+            ),
           ),
         ],
       ),
@@ -807,4 +930,16 @@ class PackageCard extends StatelessWidget {
       return price.toString();
     }
   }
+}
+
+// Add this helper method for the animated dots
+Widget _buildDot(bool isActive) {
+  return Container(
+    width: 8,
+    height: 8,
+    decoration: BoxDecoration(
+      shape: BoxShape.circle,
+      color: isActive ? Colors.red : Colors.grey[300],
+    ),
+  );
 }
