@@ -436,9 +436,62 @@ class _MyHomePageState extends State<MyHomePage> {
           child: Column(
             children: [
               if (_isLoading)
-                const Padding(
-                  padding: EdgeInsets.all(16.0),
-                  child: Center(child: CircularProgressIndicator(color: Colors.red)),
+                Padding(
+                  padding: const EdgeInsets.all(16.0),
+                  child: Column(
+                    children: [
+                      // Animated loading header
+                      TweenAnimationBuilder(
+                        duration: const Duration(milliseconds: 800),
+                        tween: Tween<double>(begin: 0, end: 1),
+                        builder: (context, double value, child) {
+                          return Opacity(
+                            opacity: value,
+                            child: Row(
+                              mainAxisAlignment: MainAxisAlignment.center,
+                              children: [
+                                Icon(
+                                  Icons.signal_cellular_alt,
+                                  color: Colors.red.withOpacity(value),
+                                  size: 24,
+                                ),
+                                const SizedBox(width: 8),
+                                const Text(
+                                  'Mencari paket terbaik...',
+                                  style: TextStyle(
+                                    fontSize: 16,
+                                    fontWeight: FontWeight.w500,
+                                    color: Color.fromARGB(255, 165, 11, 0),
+                                  ),
+                                ),
+                              ],
+                            ),
+                          );
+                        },
+                      ),
+                      const SizedBox(height: 20),
+                      // Shimmer skeleton cards
+                      ...List.generate(3, (index) => _buildShimmerCard(index)),
+                      // Animated dots indicator
+                      const SizedBox(height: 16),
+                      TweenAnimationBuilder(
+                        duration: const Duration(milliseconds: 1000),
+                        tween: Tween<double>(begin: 0, end: 1),
+                        builder: (context, double value, child) {
+                          return Row(
+                            mainAxisAlignment: MainAxisAlignment.center,
+                            children: [
+                              _buildLoadingDot(value > 0.2, 0),
+                              const SizedBox(width: 8),
+                              _buildLoadingDot(value > 0.5, 100),
+                              const SizedBox(width: 8),
+                              _buildLoadingDot(value > 0.8, 200),
+                            ],
+                          );
+                        },
+                      ),
+                    ],
+                  ),
                 ),
               if (_errorMessage.isNotEmpty)
                 Padding(
@@ -941,5 +994,159 @@ Widget _buildDot(bool isActive) {
       shape: BoxShape.circle,
       color: isActive ? Colors.red : Colors.grey[300],
     ),
+  );
+}
+
+// Shimmer card for loading state
+Widget _buildShimmerCard(int index) {
+  return TweenAnimationBuilder(
+    duration: Duration(milliseconds: 600 + (index * 200)),
+    tween: Tween<double>(begin: 0, end: 1),
+    builder: (context, double value, child) {
+      return Transform.translate(
+        offset: Offset(0, 50 * (1 - value)),
+        child: Opacity(
+          opacity: value,
+          child: Container(
+            margin: const EdgeInsets.only(bottom: 16),
+            decoration: BoxDecoration(
+              borderRadius: BorderRadius.circular(8),
+              border: Border.all(
+                color: const Color.fromARGB(255, 165, 11, 0),
+                width: 1.0,
+              ),
+              color: Colors.white,
+            ),
+            child: Padding(
+              padding: const EdgeInsets.all(16.0),
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  // Animated shimmer effect for title
+                  _buildShimmerBox(
+                    width: 200 + (index * 30).toDouble(),
+                    height: 20,
+                    delay: index * 100,
+                  ),
+                  const SizedBox(height: 8),
+                  // Shimmer for description
+                  _buildShimmerBox(
+                    width: 150 + (index * 20).toDouble(),
+                    height: 16,
+                    delay: index * 100 + 50,
+                  ),
+                  const SizedBox(height: 4),
+                  _buildShimmerBox(
+                    width: 120,
+                    height: 16,
+                    delay: index * 100 + 100,
+                  ),
+                  const SizedBox(height: 12),
+                  // Price and button row
+                  Row(
+                    mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                    children: [
+                      _buildShimmerBox(
+                        width: 100,
+                        height: 18,
+                        delay: index * 100 + 150,
+                      ),
+                      _buildShimmerButton(delay: index * 100 + 200),
+                    ],
+                  ),
+                ],
+              ),
+            ),
+          ),
+        ),
+      );
+    },
+  );
+}
+
+Widget _buildShimmerBox({
+  required double width,
+  required double height,
+  required int delay,
+}) {
+  return TweenAnimationBuilder(
+    duration: const Duration(milliseconds: 1500),
+    tween: Tween<double>(begin: 0, end: 1),
+    builder: (context, double value, child) {
+      return AnimatedContainer(
+        duration: Duration(milliseconds: 300 + delay),
+        width: width,
+        height: height,
+        decoration: BoxDecoration(
+          borderRadius: BorderRadius.circular(4),
+          gradient: LinearGradient(
+            begin: Alignment(-1.0 + (value * 2), 0),
+            end: Alignment(1.0 + (value * 2), 0),
+            colors: [
+              Colors.grey[300]!,
+              Colors.grey[100]!,
+              Colors.grey[300]!,
+            ],
+            stops: const [0.0, 0.5, 1.0],
+          ),
+        ),
+      );
+    },
+  );
+}
+
+Widget _buildShimmerButton({required int delay}) {
+  return TweenAnimationBuilder(
+    duration: Duration(milliseconds: 800 + delay),
+    tween: Tween<double>(begin: 0, end: 1),
+    builder: (context, double value, child) {
+      return Transform.scale(
+        scale: 0.8 + (0.2 * value),
+        child: Container(
+          width: 60,
+          height: 32,
+          decoration: BoxDecoration(
+            borderRadius: BorderRadius.circular(4),
+            gradient: LinearGradient(
+              begin: Alignment(-1.0 + (value * 2), 0),
+              end: Alignment(1.0 + (value * 2), 0),
+              colors: [
+                Colors.red[300]!,
+                Colors.red[100]!,
+                Colors.red[300]!,
+              ],
+              stops: const [0.0, 0.5, 1.0],
+            ),
+          ),
+        ),
+      );
+    },
+  );
+}
+
+Widget _buildLoadingDot(bool isActive, int delay) {
+  return TweenAnimationBuilder(
+    duration: Duration(milliseconds: 500 + delay),
+    tween: Tween<double>(begin: 0, end: 1),
+    builder: (context, double value, child) {
+      return AnimatedContainer(
+        duration: const Duration(milliseconds: 300),
+        width: isActive ? 12 : 8,
+        height: isActive ? 12 : 8,
+        decoration: BoxDecoration(
+          shape: BoxShape.circle,
+          color: isActive 
+            ? Colors.red.withOpacity(value)
+            : Colors.grey[300],
+          boxShadow: isActive ? [
+            BoxShadow(
+              color: Colors.red.withOpacity(0.3 * value),
+              spreadRadius: 2,
+              blurRadius: 4,
+            ),
+          ] : null,
+        ),
+      );
+    },
   );
 }
