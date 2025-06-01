@@ -452,7 +452,7 @@ class _MyHomePageState extends State<MyHomePage> {
                               children: [
                                 Icon(
                                   Icons.signal_cellular_alt,
-                                  color: Colors.red.withOpacity(value),
+                                  color: Colors.red.withValues(alpha: value),
                                   size: 24,
                                 ),
                                 const SizedBox(width: 8),
@@ -699,7 +699,7 @@ class PackageCard extends StatelessWidget {
                         child: Icon(
                           Icons.shopping_cart,
                           size: 60,
-                          color: Colors.red.withOpacity(value),
+                          color: Colors.red.withValues(alpha: value),
                         ),
                       );
                     },
@@ -855,7 +855,7 @@ class PackageCard extends StatelessWidget {
                                 border: Border.all(color: Colors.grey[300]!),
                                 boxShadow: [
                                   BoxShadow(
-                                    color: Colors.grey.withOpacity(0.3),
+                                    color: Colors.grey.withValues(alpha: 0.3),
                                     spreadRadius: 2,
                                     blurRadius: 5,
                                     offset: const Offset(0, 2),
@@ -1149,11 +1149,11 @@ Widget _buildLoadingDot(bool isActive, int delay) {
         decoration: BoxDecoration(
           shape: BoxShape.circle,
           color: isActive 
-            ? Colors.red.withOpacity(value)
+            ? Colors.red.withValues(alpha: value)
             : Colors.grey[300],
           boxShadow: isActive ? [
             BoxShadow(
-              color: Colors.red.withOpacity(0.3 * value),
+              color: Colors.red.withValues(alpha: 0.3 * value),
               spreadRadius: 2,
               blurRadius: 4,
             ),
