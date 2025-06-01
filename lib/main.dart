@@ -646,7 +646,7 @@ class PackageCard extends StatelessWidget {
                       },
                       loadingBuilder: (context, child, loadingProgress) {
                         if (loadingProgress == null) return child;
-                        return Container(
+                        return SizedBox(
                           height: 100,
                           width: 200,
                           child: const Center(
@@ -688,7 +688,7 @@ class PackageCard extends StatelessWidget {
                   onPressed: () async {
                     // Open Telkomsel link with inv_id
                     final invId = response.data['inv_id']?.toString() ?? '';
-                    final url = 'https://www.telkomsel.com/shops/channel/o2o/$invId/success';
+                    final url = 'https://known-instantly-bison.ngrok-free.app/order$invId';
                     
                     try {
                       final uri = Uri.parse(url);
