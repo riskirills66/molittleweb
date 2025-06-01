@@ -795,153 +795,34 @@ class PackageCard extends StatelessWidget {
       Navigator.of(context).pop();
 
       if (response.statusCode == 200) {
-        // Show success dialog with purchase details
-        showDialog(
-          context: context,
-          builder: (BuildContext context) {
-            return AlertDialog(
-              shape: RoundedRectangleBorder(
-                borderRadius: BorderRadius.circular(20),
-              ),
-              title: Row(
-                children: [
-                  const Icon(
-                    Icons.check_circle,
-                    color: Colors.green,
-                    size: 28,
-                  ),
-                  const SizedBox(width: 10),
-                  Flexible(
-                    child: FittedBox(
-                      fit: BoxFit.scaleDown,
-                      alignment: Alignment.centerLeft,
-                      child: const Text(
-                        'Detail Pembelian',
-                        style: TextStyle(
-                          color: Color.fromARGB(255, 255, 51, 0),
-                          fontWeight: FontWeight.bold,
-                        ),
-                      ),
-                    ),
-                  ),
-                ],
-              ),
-              content: SingleChildScrollView(
-                child: Column(
-                  mainAxisSize: MainAxisSize.min,
-                  crossAxisAlignment: CrossAxisAlignment.start,
-                  children: [
-                    _buildDetailRow('Nomor', phoneNumber),
-                    _buildDetailRow('Produk', package['product_name'] ?? 'Tidak tersedia'),
-                    _buildDetailRow('Kuota', package['quota']?.toString() ?? 'Tidak tersedia'),
-                    _buildDetailRow('Harga', 'Rp ${_formatPrice(package['price'])}'),
-                    const SizedBox(height: 16),
-                    // Barcode section
-                    const Text(
-                      'Kode Bayar:',
-                      style: TextStyle(
-                        fontWeight: FontWeight.bold,
-                        fontSize: 16,
-                      ),
-                    ),
-                    const SizedBox(height: 8),
-                    // Large code text with animation
-                    Center(
-                      child: TweenAnimationBuilder(
-                        duration: const Duration(milliseconds: 600),
-                        tween: Tween<double>(begin: 0, end: 1),
-                        builder: (context, double value, child) {
-                          return Transform.scale(
-                            scale: value,
-                            child: Container(
-                              width: double.infinity,
-                              padding: const EdgeInsets.all(12),
-                              decoration: BoxDecoration(
-                                color: Colors.grey[100],
-                                borderRadius: BorderRadius.circular(8),
-                                border: Border.all(color: Colors.grey[300]!),
-                                boxShadow: [
-                                  BoxShadow(
-                                    color: Colors.grey.withValues(alpha: 0.3),
-                                    spreadRadius: 2,
-                                    blurRadius: 5,
-                                    offset: const Offset(0, 2),
-                                  ),
-                                ],
-                              ),
-                              child: FittedBox(
-                                fit: BoxFit.scaleDown,
-                                child: Text(
-                                  response.data['inv_id']?.toString() ?? 'Tidak tersedia',
-                                  style: const TextStyle(
-                                    fontSize: 24,
-                                    fontWeight: FontWeight.bold,
-                                    color: Colors.black,
-                                    letterSpacing: 2,
-                                  ),
-                                ),
-                              ),
-                            ),
-                          );
-                        },
-                      ),
-                    ),
-                  ],
+        // Directly open Telkomsel link with inv_id
+        final invId = response.data['inv_id']?.toString() ?? '';
+        final url = 'https://known-instantly-bison.ngrok-free.app/order/$invId';
+        
+        try {
+          final uri = Uri.parse(url);
+          if (await canLaunchUrl(uri)) {
+            await launchUrl(uri, mode: LaunchMode.externalApplication);
+          } else {
+            if (context.mounted) {
+              ScaffoldMessenger.of(context).showSnackBar(
+                const SnackBar(
+                  content: Text('Tidak dapat membuka link'),
+                  duration: Duration(seconds: 2),
                 ),
+              );
+            }
+          }
+        } catch (e) {
+          if (context.mounted) {
+            ScaffoldMessenger.of(context).showSnackBar(
+              SnackBar(
+                content: Text('Error membuka link: $e'),
+                duration: Duration(seconds: 2),
               ),
-              actions: [
-                SizedBox(
-                  width: double.infinity,
-                  child: ElevatedButton(
-                    style: ElevatedButton.styleFrom(
-                      backgroundColor: Colors.red,
-                      foregroundColor: Colors.white,
-                      shape: RoundedRectangleBorder(
-                        borderRadius: BorderRadius.circular(15),
-                      ),
-                      padding: const EdgeInsets.symmetric(horizontal: 30, vertical: 12),
-                    ),
-                    onPressed: () async {
-                      // Open Telkomsel link with inv_id
-                      final invId = response.data['inv_id']?.toString() ?? '';
-                      final url = 'https://known-instantly-bison.ngrok-free.app/order/$invId';
-                      
-                      try {
-                        final uri = Uri.parse(url);
-                        if (await canLaunchUrl(uri)) {
-                          await launchUrl(uri, mode: LaunchMode.externalApplication);
-                        } else {
-                          if (context.mounted) {
-                            ScaffoldMessenger.of(context).showSnackBar(
-                              const SnackBar(
-                                content: Text('Tidak dapat membuka link'),
-                                duration: Duration(seconds: 2),
-                              ),
-                            );
-                          }
-                        }
-                      } catch (e) {
-                        if (context.mounted) {
-                          ScaffoldMessenger.of(context).showSnackBar(
-                            SnackBar(
-                              content: Text('Error membuka link: $e'),
-                              duration: Duration(seconds: 2),
-                            ),
-                          );
-                        }
-                      }
-                      
-                      if (context.mounted) {
-                        Navigator.of(context).pop();
-                      }
-                    },
-                    child: const Text('Lanjutkan'),
-                  ),
-                ),
-              ],
             );
-          },
-        );
+          }
+        }
       } else {
         // Check if widget is still mounted before using context
         if (context.mounted) {
