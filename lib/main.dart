@@ -1004,36 +1004,42 @@ class PackageCard extends StatelessWidget {
                     fontWeight: FontWeight.bold,
                   ),
                 ),
-                const SizedBox(height: 8),
-                Text(
-                  package['quota']?.toString().split(',').join('\n') ?? 'Tidak tersedia',
-                  style: const TextStyle(fontSize: 12),
-                ),
+                if (package['quota'] != null && package['quota'].toString().isNotEmpty) ...[
+                  const SizedBox(height: 8),
+                  Text(
+                    package['quota'].toString().split(',').join('\n'),
+                    style: const TextStyle(fontSize: 12),
+                  ),
+                ],
                 const SizedBox(height: 16),
-                Column(
-                  crossAxisAlignment: CrossAxisAlignment.start,
+                Row(
+                  mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                  crossAxisAlignment: CrossAxisAlignment.center,
                   children: [
-                    Text(
-                      'Harga: Rp ${_formatPrice(package['price'])}',
-                      style: TextStyle(
-                        fontSize: 14,
-                        fontWeight: FontWeight.bold,
-                        color: primaryColor,
+                    Expanded(
+                      child: Text(
+                        'Harga: Rp ${_formatPrice(package['price'])}',
+                        style: TextStyle(
+                          fontSize: 14,
+                          fontWeight: FontWeight.bold,
+                          color: primaryColor,
+                        ),
                       ),
                     ),
-                    const SizedBox(height: 8),
-                    SizedBox(
-                      width: double.infinity,
-                      child: ElevatedButton(
-                        style: ElevatedButton.styleFrom(
-                          backgroundColor: activeColor,
-                          foregroundColor: Colors.white,
-                          padding: const EdgeInsets.symmetric(vertical: 12),
-                        ),
-                        onPressed: () {
-                          _buyPackage(context);
-                        },
-                        child: const Text('Beli'),
+                    const SizedBox(width: 8),
+                    ElevatedButton(
+                      style: ElevatedButton.styleFrom(
+                        backgroundColor: activeColor,
+                        foregroundColor: Colors.white,
+                        padding: const EdgeInsets.symmetric(vertical: 8, horizontal: 16),
+                        minimumSize: const Size(60, 32),
+                      ),
+                      onPressed: () {
+                        _buyPackage(context);
+                      },
+                      child: const Text(
+                        'Beli',
+                        style: TextStyle(fontSize: 12),
                       ),
                     ),
                   ],
@@ -1054,14 +1060,15 @@ class PackageCard extends StatelessWidget {
                         overflow: TextOverflow.ellipsis,
                       ),
                       const SizedBox(height: 4),
-                      Expanded(
-                        child: Text(
-                          package['quota']?.toString().split(',').join('\n') ?? 'Tidak tersedia',
-                          style: const TextStyle(fontSize: 12),
-                          maxLines: 4,
-                          overflow: TextOverflow.ellipsis,
+                      if (package['quota'] != null && package['quota'].toString().isNotEmpty)
+                        Expanded(
+                          child: Text(
+                            package['quota'].toString().split(',').join('\n'),
+                            style: const TextStyle(fontSize: 12),
+                            maxLines: 4,
+                            overflow: TextOverflow.ellipsis,
+                          ),
                         ),
-                      ),
                     ],
                   ),
                 ),
