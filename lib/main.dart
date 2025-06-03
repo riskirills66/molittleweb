@@ -7,8 +7,8 @@ import 'package:url_launcher/url_launcher.dart';
 // CONFIGURATION SECTION - Change these values as needed
 // =============================================================================
 class AppConfig {
-  // API Base URLs
-  static const String baseApiUrl = 'https://known-instantly-bison.ngrok-free.app';
+  // API Base URLs change this conditioned to API server location
+  static const String baseApiUrl = 'http://localhost/api';
 
   // Base Provider ID
   static String get baseProviderId {
