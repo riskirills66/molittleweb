@@ -524,8 +524,8 @@ class _MyHomePageState extends State<MyHomePage> {
                         },
                       ),
                       const SizedBox(height: 20),
-                      // Shimmer skeleton cards
-                      ...List.generate(3, (index) => _buildShimmerCard(index)),
+                      // Shimmer skeleton cards in grid
+                      _buildShimmerGrid(),
                       // Animated dots indicator
                       const SizedBox(height: 16),
                       TweenAnimationBuilder(
@@ -604,20 +604,7 @@ class _MyHomePageState extends State<MyHomePage> {
               if (_filteredPackages.isNotEmpty)
                 Padding(
                   padding: const EdgeInsets.all(16.0),
-                  child: Column(
-                    crossAxisAlignment: CrossAxisAlignment.start,
-                    children: [
-                      const SizedBox(height: 10),
-                      ..._filteredPackages.map((package) => PackageCard(
-                        package: package,
-                        phoneNumber: _phoneController.text,
-                        currentListType: _currentListType,
-                        selectedCategory: _selectedCategory,
-                        primaryColor: _primaryColor,
-                        activeColor: _activeColor,
-                      )),
-                    ],
-                  ),
+                  child: _buildPackageGrid(),
                 ),
             ],
           ),
@@ -654,8 +641,115 @@ class _MyHomePageState extends State<MyHomePage> {
     );
   }
 
-  // Update shimmer and loading dot methods to use dynamic colors
-  Widget _buildShimmerCard(int index) {
+  // Helper method to determine number of columns based on screen width
+  int _getColumnsCount(double screenWidth) {
+    if (screenWidth >= 1400) return 4;
+    if (screenWidth >= 1000) return 3;
+    if (screenWidth >= 600) return 2;
+    return 1;
+  }
+
+  // Build responsive package grid
+  Widget _buildPackageGrid() {
+    return LayoutBuilder(
+      builder: (context, constraints) {
+        final screenWidth = constraints.maxWidth;
+        final columnsCount = _getColumnsCount(screenWidth);
+        
+        // Use different layouts based on column count
+        if (columnsCount == 1) {
+          // Single column: Use dynamic height ListView
+          return ListView.builder(
+            shrinkWrap: true,
+            physics: const NeverScrollableScrollPhysics(),
+            itemCount: _filteredPackages.length,
+            itemBuilder: (context, index) {
+              return Padding(
+                padding: const EdgeInsets.only(bottom: 16.0),
+                child: PackageCard(
+                  package: _filteredPackages[index],
+                  phoneNumber: _phoneController.text,
+                  currentListType: _currentListType,
+                  selectedCategory: _selectedCategory,
+                  primaryColor: _primaryColor,
+                  activeColor: _activeColor,
+                  isDynamicHeight: true, // Enable dynamic height
+                ),
+              );
+            },
+          );
+        } else {
+          // Multi-column: Use uniform height GridView
+          return GridView.builder(
+            shrinkWrap: true,
+            physics: const NeverScrollableScrollPhysics(),
+            gridDelegate: SliverGridDelegateWithFixedCrossAxisCount(
+              crossAxisCount: columnsCount,
+              crossAxisSpacing: 16.0,
+              mainAxisSpacing: 16.0,
+              childAspectRatio: 1.2, // Fixed aspect ratio for uniform height
+            ),
+            itemCount: _filteredPackages.length,
+            itemBuilder: (context, index) {
+              return PackageCard(
+                package: _filteredPackages[index],
+                phoneNumber: _phoneController.text,
+                currentListType: _currentListType,
+                selectedCategory: _selectedCategory,
+                primaryColor: _primaryColor,
+                activeColor: _activeColor,
+                isDynamicHeight: false, // Use fixed height
+              );
+            },
+          );
+        }
+      },
+    );
+  }
+
+  // Build shimmer grid for loading state
+  Widget _buildShimmerGrid() {
+    return LayoutBuilder(
+      builder: (context, constraints) {
+        final screenWidth = constraints.maxWidth;
+        final columnsCount = _getColumnsCount(screenWidth);
+        
+        if (columnsCount == 1) {
+          // Single column: Use dynamic height ListView for shimmer
+          return ListView.builder(
+            shrinkWrap: true,
+            physics: const NeverScrollableScrollPhysics(),
+            itemCount: 6,
+            itemBuilder: (context, index) {
+              return Padding(
+                padding: const EdgeInsets.only(bottom: 16.0),
+                child: _buildShimmerCard(index, isDynamic: true),
+              );
+            },
+          );
+        } else {
+          // Multi-column: Use uniform height GridView for shimmer
+          return GridView.builder(
+            shrinkWrap: true,
+            physics: const NeverScrollableScrollPhysics(),
+            gridDelegate: SliverGridDelegateWithFixedCrossAxisCount(
+              crossAxisCount: columnsCount,
+              crossAxisSpacing: 16.0,
+              mainAxisSpacing: 16.0,
+              childAspectRatio: 1.2,
+            ),
+            itemCount: 6,
+            itemBuilder: (context, index) {
+              return _buildShimmerCard(index, isDynamic: false);
+            },
+          );
+        }
+      },
+    );
+  }
+
+  // Update shimmer card to support dynamic height
+  Widget _buildShimmerCard(int index, {bool isDynamic = false}) {
     return TweenAnimationBuilder(
       duration: Duration(milliseconds: 600 + (index * 200)),
       tween: Tween<double>(begin: 0, end: 1),
@@ -665,7 +759,10 @@ class _MyHomePageState extends State<MyHomePage> {
           child: Opacity(
             opacity: value,
             child: Container(
-              margin: const EdgeInsets.only(bottom: 16),
+              // Remove fixed height constraint for dynamic height
+              constraints: isDynamic 
+                ? const BoxConstraints(maxWidth: 400)
+                : null,
               decoration: BoxDecoration(
                 borderRadius: BorderRadius.circular(8),
                 border: Border.all(
@@ -675,39 +772,87 @@ class _MyHomePageState extends State<MyHomePage> {
                 color: Colors.white,
               ),
               child: Padding(
-                padding: const EdgeInsets.all(16.0),
+                padding: const EdgeInsets.all(12.0),
                 child: Column(
                   crossAxisAlignment: CrossAxisAlignment.start,
+                  mainAxisSize: isDynamic ? MainAxisSize.min : MainAxisSize.max,
                   children: [
-                    _buildShimmerBox(
-                      width: 200 + (index * 30).toDouble(),
-                      height: 20,
-                      delay: index * 100,
-                    ),
-                    const SizedBox(height: 8),
-                    _buildShimmerBox(
-                      width: 150 + (index * 20).toDouble(),
-                      height: 16,
-                      delay: index * 100 + 50,
-                    ),
-                    const SizedBox(height: 4),
-                    _buildShimmerBox(
-                      width: 120,
-                      height: 16,
-                      delay: index * 100 + 100,
-                    ),
-                    const SizedBox(height: 12),
-                    Row(
-                      mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                      children: [
-                        _buildShimmerBox(
-                          width: 100,
-                          height: 18,
-                          delay: index * 100 + 150,
+                    if (isDynamic) ...[
+                      // Dynamic height shimmer content
+                      _buildShimmerBox(
+                        width: double.infinity,
+                        height: 20,
+                        delay: index * 100,
+                      ),
+                      const SizedBox(height: 8),
+                      _buildShimmerBox(
+                        width: double.infinity,
+                        height: 16,
+                        delay: index * 100 + 50,
+                      ),
+                      const SizedBox(height: 4),
+                      _buildShimmerBox(
+                        width: double.infinity,
+                        height: 16,
+                        delay: index * 100 + 75,
+                      ),
+                      const SizedBox(height: 4),
+                      _buildShimmerBox(
+                        width: 120,
+                        height: 16,
+                        delay: index * 100 + 100,
+                      ),
+                      const SizedBox(height: 16),
+                      Row(
+                        mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                        children: [
+                          _buildShimmerBox(
+                            width: 80,
+                            height: 18,
+                            delay: index * 100 + 150,
+                          ),
+                          _buildShimmerButton(delay: index * 100 + 200),
+                        ],
+                      ),
+                    ] else ...[
+                      // Fixed height shimmer content (existing code)
+                      Expanded(
+                        child: Column(
+                          crossAxisAlignment: CrossAxisAlignment.start,
+                          children: [
+                            _buildShimmerBox(
+                              width: double.infinity,
+                              height: 20,
+                              delay: index * 100,
+                            ),
+                            const SizedBox(height: 8),
+                            _buildShimmerBox(
+                              width: double.infinity,
+                              height: 16,
+                              delay: index * 100 + 50,
+                            ),
+                            const SizedBox(height: 4),
+                            _buildShimmerBox(
+                              width: 120,
+                              height: 16,
+                              delay: index * 100 + 100,
+                            ),
+                            const Spacer(),
+                          ],
                         ),
-                        _buildShimmerButton(delay: index * 100 + 200),
-                      ],
-                    ),
+                      ),
+                      Row(
+                        mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                        children: [
+                          _buildShimmerBox(
+                            width: 80,
+                            height: 18,
+                            delay: index * 100 + 150,
+                          ),
+                          _buildShimmerButton(delay: index * 100 + 200),
+                        ],
+                      ),
+                    ],
                   ],
                 ),
               ),
@@ -813,6 +958,7 @@ class PackageCard extends StatelessWidget {
   final String selectedCategory;
   final Color primaryColor;
   final Color activeColor;
+  final bool isDynamicHeight;
 
   const PackageCard({
     super.key, 
@@ -822,12 +968,12 @@ class PackageCard extends StatelessWidget {
     required this.selectedCategory,
     required this.primaryColor,
     required this.activeColor,
+    this.isDynamicHeight = false,
   });
 
   @override
   Widget build(BuildContext context) {
     return Card(
-      margin: const EdgeInsets.only(bottom: 16),
       elevation: 4,
       shape: RoundedRectangleBorder(
         borderRadius: BorderRadius.circular(8),
@@ -836,48 +982,121 @@ class PackageCard extends StatelessWidget {
           width: 1.0,
         ),
       ),
-      child: Padding(
-        padding: const EdgeInsets.all(16.0),
-        child: Column(
-          crossAxisAlignment: CrossAxisAlignment.start,
-          children: [
-            Text(
-              package['product_name'] ?? 'Nama Paket Tidak Tersedia',
-              style: const TextStyle(
-                fontSize: 14,
-                fontWeight: FontWeight.bold,
-              ),
+      child: Container(
+        constraints: isDynamicHeight 
+          ? const BoxConstraints(maxWidth: 400) // Only max width for dynamic height
+          : const BoxConstraints(
+              maxWidth: 400, 
+              maxHeight: 300, // Keep max height for grid layout
             ),
-            const SizedBox(height: 4),
-            Text(
-              package['quota']?.toString().split(',').join('\n') ?? 'Tidak tersedia',
-              style: const TextStyle(fontSize: 14),
-            ),
-            const SizedBox(height: 8),
-            Row(
-              mainAxisAlignment: MainAxisAlignment.spaceBetween,
-              children: [
+        child: Padding(
+          padding: const EdgeInsets.all(12.0),
+          child: Column(
+            crossAxisAlignment: CrossAxisAlignment.start,
+            mainAxisSize: isDynamicHeight ? MainAxisSize.min : MainAxisSize.max,
+            children: [
+              if (isDynamicHeight) ...[
+                // Dynamic height layout
                 Text(
-                  'Harga: Rp ${_formatPrice(package['price'])}',
-                  style: TextStyle(
-                    fontSize: 16,
+                  package['product_name'] ?? 'Nama Paket Tidak Tersedia',
+                  style: const TextStyle(
+                    fontSize: 14,
                     fontWeight: FontWeight.bold,
-                    color: primaryColor,
                   ),
                 ),
-                ElevatedButton(
-                  style: ElevatedButton.styleFrom(
-                    backgroundColor: activeColor,
-                    foregroundColor: Colors.white,
+                const SizedBox(height: 8),
+                Text(
+                  package['quota']?.toString().split(',').join('\n') ?? 'Tidak tersedia',
+                  style: const TextStyle(fontSize: 12),
+                ),
+                const SizedBox(height: 16),
+                Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    Text(
+                      'Harga: Rp ${_formatPrice(package['price'])}',
+                      style: TextStyle(
+                        fontSize: 14,
+                        fontWeight: FontWeight.bold,
+                        color: primaryColor,
+                      ),
+                    ),
+                    const SizedBox(height: 8),
+                    SizedBox(
+                      width: double.infinity,
+                      child: ElevatedButton(
+                        style: ElevatedButton.styleFrom(
+                          backgroundColor: activeColor,
+                          foregroundColor: Colors.white,
+                          padding: const EdgeInsets.symmetric(vertical: 12),
+                        ),
+                        onPressed: () {
+                          _buyPackage(context);
+                        },
+                        child: const Text('Beli'),
+                      ),
+                    ),
+                  ],
+                ),
+              ] else ...[
+                // Fixed height layout (existing code)
+                Expanded(
+                  child: Column(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: [
+                      Text(
+                        package['product_name'] ?? 'Nama Paket Tidak Tersedia',
+                        style: const TextStyle(
+                          fontSize: 14,
+                          fontWeight: FontWeight.bold,
+                        ),
+                        maxLines: 2,
+                        overflow: TextOverflow.ellipsis,
+                      ),
+                      const SizedBox(height: 4),
+                      Expanded(
+                        child: Text(
+                          package['quota']?.toString().split(',').join('\n') ?? 'Tidak tersedia',
+                          style: const TextStyle(fontSize: 12),
+                          maxLines: 4,
+                          overflow: TextOverflow.ellipsis,
+                        ),
+                      ),
+                    ],
                   ),
-                  onPressed: () {
-                    _buyPackage(context);
-                  },
-                  child: const Text('Beli'),
+                ),
+                const SizedBox(height: 8),
+                Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    Text(
+                      'Harga: Rp ${_formatPrice(package['price'])}',
+                      style: TextStyle(
+                        fontSize: 14,
+                        fontWeight: FontWeight.bold,
+                        color: primaryColor,
+                      ),
+                    ),
+                    const SizedBox(height: 8),
+                    SizedBox(
+                      width: double.infinity,
+                      child: ElevatedButton(
+                        style: ElevatedButton.styleFrom(
+                          backgroundColor: activeColor,
+                          foregroundColor: Colors.white,
+                          padding: const EdgeInsets.symmetric(vertical: 8),
+                        ),
+                        onPressed: () {
+                          _buyPackage(context);
+                        },
+                        child: const Text('Beli'),
+                      ),
+                    ),
+                  ],
                 ),
               ],
-            ),
-          ],
+            ],
+          ),
         ),
       ),
     );
