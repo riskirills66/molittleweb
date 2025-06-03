@@ -132,7 +132,6 @@ class _MyHomePageState extends State<MyHomePage> {
   Future<void> _loadConfiguration() async {
     try {
       final dio = Dio();
-      print('Attempting to load config from: ${AppConfig.configUrl}');
       
       final response = await dio.post(
         AppConfig.configUrl,
@@ -140,21 +139,16 @@ class _MyHomePageState extends State<MyHomePage> {
         data: {},
       );
       
-      print('Config response status: ${response.statusCode}');
-      
       if (response.statusCode == 200) {
-        print('Config loaded successfully: ${response.data}');
         setState(() {
           _config = response.data;
           _buttons = _config['buttons'] ?? [];
           _configLoaded = true;
         });
       } else {
-        print('Config request failed with status: ${response.statusCode}');
         _useDefaultConfig();
       }
     } catch (e) {
-      print('Error loading configuration: $e');
       if (mounted) {
         ScaffoldMessenger.of(context).showSnackBar(
           SnackBar(
