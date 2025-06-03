@@ -44,10 +44,145 @@ class _MyHomePageState extends State<MyHomePage> {
   String _selectedCategory = 'DATA'; // Default category
   String _currentListType = 'listTerbaik'; // Add this to track current list type
   
+  // Configuration variables
+  Map<String, dynamic> _config = {};
+  List<dynamic> _buttons = [];
+  bool _configLoaded = false;
+  
+  @override
+  void initState() {
+    super.initState();
+    _loadConfiguration();
+  }
+  
   @override
   void dispose() {
     _phoneController.dispose();
     super.dispose();
+  }
+
+  Future<void> _loadConfiguration() async {
+    try {
+      final dio = Dio();
+      print('Attempting to load config from: https://known-instantly-bison.ngrok-free.app/config/telkomsel');
+      
+      // Use the same headers that work for /query/telkomsel
+      final response = await dio.post(
+        'https://known-instantly-bison.ngrok-free.app/config/telkomsel',
+        options: Options(
+          headers: {
+            'Content-Type': 'application/json',
+            'Accept': 'application/json',
+            // Remove the ngrok header to match your working request
+          },
+        ),
+        data: {},
+      );
+      
+      print('Config response status: ${response.statusCode}');
+      
+      if (response.statusCode == 200) {
+        print('Config loaded successfully: ${response.data}');
+        setState(() {
+          _config = response.data;
+          _buttons = _config['buttons'] ?? [];
+          _configLoaded = true;
+        });
+      } else {
+        print('Config request failed with status: ${response.statusCode}');
+        _useDefaultConfig();
+      }
+    } catch (e) {
+      print('Error loading configuration: $e');
+      if (mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(
+            content: Text('Failed to load configuration: $e'),
+            backgroundColor: Colors.orange,
+            duration: const Duration(seconds: 3),
+          ),
+        );
+      }
+      _useDefaultConfig();
+    }
+  }
+
+  void _useDefaultConfig() {
+    setState(() {
+      _config = {
+        "theme": {
+          "primaryColor": "#d0010d",
+          "backgroundColor": "#d0010d",
+          "surfaceColor": "#F5F5DC",
+          "onPrimaryColor": "#FFFFFF",
+          "onSurfaceColor": "#000000",
+          "accentColor": "#FF3A2C",
+          "errorColor": "#D32F2F",
+          "successColor": "#388E3C",
+          "activeColor": "#e73b29"
+        },
+        "buttons": [
+          {"label": "Paket Terbaik", "listType": "listTerbaik", "category": "DATA"},
+          {"label": "Paket Data", "listType": "list_product", "category": "DATA"},
+          {"label": "Roaming Terbaik", "listType": "listTerbaik", "category": "ROAMING"},
+          {"label": "Nelpon Terbaik", "listType": "listTerbaik", "category": "VOICE_SMS"},
+          {"label": "Paket Nelpon & SMS", "listType": "listVoiceSMS", "category": null},
+          {"label": "Digital & Game", "listType": "listTerbaik", "category": "DIGITAL_GAME"}
+        ]
+      };
+      _buttons = _config['buttons'] ?? [];
+      _configLoaded = true;
+    });
+  }
+
+  Color _getColorFromHex(String hexColor) {
+    try {
+      final color = hexColor.replaceAll('#', '');
+      return Color(int.parse('FF$color', radix: 16));
+    } catch (e) {
+      return Colors.red; // fallback color
+    }
+  }
+
+  Color get _primaryColor => _getColorFromHex(_config['theme']?['primaryColor'] ?? '#d0010d');
+  Color get _backgroundColor => _getColorFromHex(_config['theme']?['backgroundColor'] ?? '#d0010d');
+  Color get _surfaceColor => _getColorFromHex(_config['theme']?['surfaceColor'] ?? '#F5F5DC');
+  Color get _activeColor => _getColorFromHex(_config['theme']?['activeColor'] ?? '#e73b29');
+
+  bool _isButtonActive(dynamic button) {
+    final buttonListType = button['listType'];
+    final buttonCategory = button['category'];
+    
+    if (buttonCategory == null && buttonListType == 'listVoiceSMS') {
+      return _currentListType == 'listVoiceSMS';
+    }
+    
+    return _currentListType == buttonListType && _selectedCategory == buttonCategory;
+  }
+
+  void _onButtonPressed(dynamic button) {
+    if (_phoneController.text.isEmpty) {
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(content: Text('Mohon masukkan nomor telepon')),
+      );
+      return;
+    }
+
+    final buttonListType = button['listType'];
+    final buttonCategory = button['category'];
+
+    setState(() {
+      _currentListType = buttonListType;
+      if (buttonCategory != null) {
+        _selectedCategory = buttonCategory;
+      }
+    });
+
+    if (buttonListType == 'listVoiceSMS' && buttonCategory == null) {
+      _fetchPackagesWithVoiceSMS();
+    } else {
+      _fetchPackages();
+    }
   }
 
   Future<void> _fetchPackages({String? listType}) async {
@@ -127,17 +262,6 @@ class _MyHomePageState extends State<MyHomePage> {
       _filteredPackages = _packages.where((package) => 
         package['product_sub_category'] == subCategory).toList();
     });
-  }
-
-  // Add this method to fetch packages with a specific list type and category
-  void _fetchPackagesWithType(String listType) {
-    if (_phoneController.text.isNotEmpty) {
-      _fetchPackages(listType: listType);
-    } else {
-      ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(content: Text('Mohon masukkan nomor telepon')),
-      );
-    }
   }
 
   // Add this method to fetch packages for Voice_SMS category
@@ -221,13 +345,24 @@ class _MyHomePageState extends State<MyHomePage> {
 
   @override
   Widget build(BuildContext context) {
+    if (!_configLoaded) {
+      return Scaffold(
+        backgroundColor: _backgroundColor,
+        body: const Center(
+          child: CircularProgressIndicator(
+            valueColor: AlwaysStoppedAnimation<Color>(Colors.white),
+          ),
+        ),
+      );
+    }
+
     return Scaffold(
       // Removed appBar completely
       body: Column(
         children: [
           // Red background section
           Container(
-            color: const Color.fromARGB(255, 165, 11, 0),
+            color: _backgroundColor,
             padding: const EdgeInsets.fromLTRB(16.0, 20.0, 16.0, 20.0),
             child: Column(
               children: [
@@ -241,9 +376,9 @@ class _MyHomePageState extends State<MyHomePage> {
                       borderRadius: BorderRadius.all(Radius.circular(20.0)),
                       borderSide: BorderSide(color: Colors.grey),
                     ),
-                    focusedBorder: const OutlineInputBorder(
-                      borderRadius: BorderRadius.all(Radius.circular(20.0)),
-                      borderSide: BorderSide(color: Colors.red),
+                    focusedBorder: OutlineInputBorder(
+                      borderRadius: const BorderRadius.all(Radius.circular(20.0)),
+                      borderSide: BorderSide(color: _primaryColor),
                     ),
                     hintText: 'Masukkan Nomor',
                     prefixIcon: const Padding(
@@ -282,144 +417,31 @@ class _MyHomePageState extends State<MyHomePage> {
                   ],
                 ),
                 const SizedBox(height: 10),
-                // Scrollable row of buttons
+                // Dynamic scrollable row of buttons
                 SizedBox(
                   height: 40,
                   child: SingleChildScrollView(
                     scrollDirection: Axis.horizontal,
                     child: Row(
-                      children: [
-                        ElevatedButton(
-                          style: ElevatedButton.styleFrom(
-                            backgroundColor: _currentListType == 'listTerbaik' && _selectedCategory == 'DATA'? Colors.red : Colors.white,
-                            foregroundColor: _currentListType == 'listTerbaik' && _selectedCategory == 'DATA'? Colors.white : Colors.red,
-                            padding: const EdgeInsets.symmetric(vertical: 10.0, horizontal: 24.0),
-                            shape: RoundedRectangleBorder(
-                              borderRadius: BorderRadius.circular(20),
+                      children: _buttons.map<Widget>((button) {
+                        final isActive = _isButtonActive(button);
+                        
+                        return Padding(
+                          padding: const EdgeInsets.only(right: 10.0),
+                          child: ElevatedButton(
+                            style: ElevatedButton.styleFrom(
+                              backgroundColor: isActive ? _activeColor : Colors.white,
+                              foregroundColor: isActive ? Colors.white : _primaryColor,
+                              padding: const EdgeInsets.symmetric(vertical: 10.0, horizontal: 24.0),
+                              shape: RoundedRectangleBorder(
+                                borderRadius: BorderRadius.circular(20),
+                              ),
                             ),
+                            onPressed: () => _onButtonPressed(button),
+                            child: Text(button['label'] ?? ''),
                           ),
-                          onPressed: () {
-                            if (_phoneController.text.isNotEmpty) {
-                              setState(() {
-                                _currentListType = 'listTerbaik';
-                                _selectedCategory = 'DATA'; // Directly set category to DATA
-                              });
-                              _fetchPackages(); // Call fetchPackages directly instead of showing dialog
-                            } else {
-                              ScaffoldMessenger.of(context).showSnackBar(
-                                const SnackBar(content: Text('Mohon masukkan nomor telepon')),
-                              );
-                            }
-                          },
-                          child: const Text('Paket Terbaik'),
-                        ),
-                        const SizedBox(width: 10),
-                        ElevatedButton(
-                          style: ElevatedButton.styleFrom(
-                            backgroundColor: _currentListType == 'list_product' ? Colors.red : Colors.white,
-                            foregroundColor: _currentListType == 'list_product' ? Colors.white : Colors.red,
-                            padding: const EdgeInsets.symmetric(vertical: 10.0, horizontal: 24.0),
-                            shape: RoundedRectangleBorder(
-                              borderRadius: BorderRadius.circular(20),
-                            ),
-                          ),
-                          onPressed: () {
-                            _selectedCategory = 'DATA'; // Always use DATA category
-                            _fetchPackagesWithType('list_product');
-                          },
-                          child: const Text('Paket Data'),
-                        ),
-                        const SizedBox(width: 10),
-                        ElevatedButton(
-                          style: ElevatedButton.styleFrom(
-                            backgroundColor: (_currentListType == 'listTerbaik' && _selectedCategory == 'ROAMING') ? Colors.red : Colors.white,
-                            foregroundColor: (_currentListType == 'listTerbaik' && _selectedCategory == 'ROAMING') ? Colors.white : Colors.red,
-                            padding: const EdgeInsets.symmetric(vertical: 10.0, horizontal: 24.0),
-                            shape: RoundedRectangleBorder(
-                              borderRadius: BorderRadius.circular(20),
-                            ),
-                          ),
-                          onPressed: () {
-                            if (_phoneController.text.isNotEmpty) {
-                              setState(() {
-                                _currentListType = 'listTerbaik';
-                                _selectedCategory = 'ROAMING';
-                              });
-                              _fetchPackages();
-                            } else {
-                              ScaffoldMessenger.of(context).showSnackBar(
-                                const SnackBar(content: Text('Mohon masukkan nomor telepon')),
-                              );
-                            }
-                          },
-                          child: const Text('Roaming Terbaik'),
-                        ),
-                        const SizedBox(width: 10),
-                        ElevatedButton(
-                          style: ElevatedButton.styleFrom(
-                            backgroundColor: (_currentListType == 'listTerbaik' && _selectedCategory == 'VOICE_SMS') ? Colors.red : Colors.white,
-                            foregroundColor: (_currentListType == 'listTerbaik' && _selectedCategory == 'VOICE_SMS') ? Colors.white : Colors.red,
-                            padding: const EdgeInsets.symmetric(vertical: 10.0, horizontal: 24.0),
-                            shape: RoundedRectangleBorder(
-                              borderRadius: BorderRadius.circular(20),
-                            ),
-                          ),
-                          onPressed: () {
-                            if (_phoneController.text.isNotEmpty) {
-                              setState(() {
-                                _currentListType = 'listTerbaik';
-                                _selectedCategory = 'VOICE_SMS';
-                              });
-                              _fetchPackages();
-                            } else {
-                              ScaffoldMessenger.of(context).showSnackBar(
-                                const SnackBar(content: Text('Mohon masukkan nomor telepon')),
-                              );
-                            }
-                          },
-                          child: const Text('Nelpon Terbaik'),
-                        ),
-                        const SizedBox(width: 10),
-                        ElevatedButton(
-                          style: ElevatedButton.styleFrom(
-                            backgroundColor: _currentListType == 'listVoiceSMS' ? Colors.red : Colors.white,
-                            foregroundColor: _currentListType == 'listVoiceSMS' ? Colors.white : Colors.red,
-                            padding: const EdgeInsets.symmetric(vertical: 10.0, horizontal: 24.0),
-                            shape: RoundedRectangleBorder(
-                              borderRadius: BorderRadius.circular(20),
-                            ),
-                          ),
-                          onPressed: () {
-                            _fetchPackagesWithVoiceSMS();
-                          },
-                          child: const Text('Paket Nelpon & SMS'),
-                        ),
-                        const SizedBox(width: 10),
-                        ElevatedButton(
-                          style: ElevatedButton.styleFrom(
-                            backgroundColor: (_currentListType == 'listTerbaik' && _selectedCategory == 'DIGITAL_GAME') ? Colors.red : Colors.white,
-                            foregroundColor: (_currentListType == 'listTerbaik' && _selectedCategory == 'DIGITAL_GAME') ? Colors.white : Colors.red,
-                            padding: const EdgeInsets.symmetric(vertical: 10.0, horizontal: 24.0),
-                            shape: RoundedRectangleBorder(
-                              borderRadius: BorderRadius.circular(20),
-                            ),
-                          ),
-                          onPressed: () {
-                            if (_phoneController.text.isNotEmpty) {
-                              setState(() {
-                                _currentListType = 'listTerbaik';
-                                _selectedCategory = 'DIGITAL_GAME';
-                              });
-                              _fetchPackages();
-                            } else {
-                              ScaffoldMessenger.of(context).showSnackBar(
-                                const SnackBar(content: Text('Mohon masukkan nomor telepon')),
-                              );
-                            }
-                          },
-                          child: const Text('Digital & Game'),
-                        ),
-                      ],
+                        );
+                      }).toList(),
                     ),
                   ),
                 ),
@@ -430,7 +452,7 @@ class _MyHomePageState extends State<MyHomePage> {
           // Cream background section for subcategories and content
           Expanded(
             child: Container(
-              color: const Color(0xFFF5F5DC), // Cream color
+              color: _surfaceColor,
               child: _isLoading || _errorMessage.isNotEmpty || _filteredPackages.isNotEmpty || _subCategories.isNotEmpty
       ? SingleChildScrollView(
           child: Column(
@@ -452,16 +474,16 @@ class _MyHomePageState extends State<MyHomePage> {
                               children: [
                                 Icon(
                                   Icons.signal_cellular_alt,
-                                  color: Colors.red.withValues(alpha: value),
+                                  color: _primaryColor.withValues(alpha: value),
                                   size: 24,
                                 ),
                                 const SizedBox(width: 8),
-                                const Text(
+                                Text(
                                   'Mencari paket terbaik...',
                                   style: TextStyle(
                                     fontSize: 16,
                                     fontWeight: FontWeight.w500,
-                                    color: Color.fromARGB(255, 165, 11, 0),
+                                    color: _primaryColor,
                                   ),
                                 ),
                               ],
@@ -498,7 +520,7 @@ class _MyHomePageState extends State<MyHomePage> {
                   padding: const EdgeInsets.all(16.0),
                   child: Text(
                     _errorMessage,
-                    style: const TextStyle(color: Colors.red),
+                    style: TextStyle(color: _getColorFromHex(_config['theme']?['errorColor'] ?? '#D32F2F')),
                   ),
                 ),
               if (_subCategories.isNotEmpty)
@@ -521,15 +543,15 @@ class _MyHomePageState extends State<MyHomePage> {
                           child: Center(
                             child: ElevatedButton(
                               style: ElevatedButton.styleFrom(
-                                backgroundColor: isSelected ? Colors.red : Colors.white,
-                                foregroundColor: isSelected ? Colors.white : Colors.red,
+                                backgroundColor: isSelected ? _activeColor : Colors.white,
+                                foregroundColor: isSelected ? Colors.white : _primaryColor,
                                 padding: const EdgeInsets.symmetric(horizontal: 24.0),
                                 shape: RoundedRectangleBorder(
                                   borderRadius: BorderRadius.circular(10),
                                   side: isSelected
                                     ? BorderSide.none
-                                    : const BorderSide(
-                                      color: Color.fromARGB(255, 165, 11, 0),
+                                    : BorderSide(
+                                      color: _primaryColor,
                                       width: 1.0,
                                       ),
                                 ),
@@ -559,6 +581,8 @@ class _MyHomePageState extends State<MyHomePage> {
                         phoneNumber: _phoneController.text,
                         currentListType: _currentListType,
                         selectedCategory: _selectedCategory,
+                        primaryColor: _primaryColor,
+                        activeColor: _activeColor,
                       )),
                     ],
                   ),
@@ -572,18 +596,18 @@ class _MyHomePageState extends State<MyHomePage> {
             child: Column(
               mainAxisAlignment: MainAxisAlignment.center,
               children: [
-                const Icon(
+                Icon(
                   Icons.phone_android,
                   size: 64,
-                  color: Color.fromARGB(255, 165, 11, 0),
+                  color: _primaryColor,
                 ),
                 const SizedBox(height: 16),
-                const Text(
+                Text(
                   'Masukkan nomor telepon dan pilih jenis paket',
                   textAlign: TextAlign.center,
                   style: TextStyle(
                     fontSize: 16,
-                    color: Color.fromARGB(255, 165, 11, 0),
+                    color: _primaryColor,
                   ),
                 ),
                 const SizedBox(height: 24),  
@@ -597,7 +621,157 @@ class _MyHomePageState extends State<MyHomePage> {
       ),
     );
   }
-  
+
+  // Update shimmer and loading dot methods to use dynamic colors
+  Widget _buildShimmerCard(int index) {
+    return TweenAnimationBuilder(
+      duration: Duration(milliseconds: 600 + (index * 200)),
+      tween: Tween<double>(begin: 0, end: 1),
+      builder: (context, double value, child) {
+        return Transform.translate(
+          offset: Offset(0, 50 * (1 - value)),
+          child: Opacity(
+            opacity: value,
+            child: Container(
+              margin: const EdgeInsets.only(bottom: 16),
+              decoration: BoxDecoration(
+                borderRadius: BorderRadius.circular(8),
+                border: Border.all(
+                  color: _primaryColor,
+                  width: 1.0,
+                ),
+                color: Colors.white,
+              ),
+              child: Padding(
+                padding: const EdgeInsets.all(16.0),
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    _buildShimmerBox(
+                      width: 200 + (index * 30).toDouble(),
+                      height: 20,
+                      delay: index * 100,
+                    ),
+                    const SizedBox(height: 8),
+                    _buildShimmerBox(
+                      width: 150 + (index * 20).toDouble(),
+                      height: 16,
+                      delay: index * 100 + 50,
+                    ),
+                    const SizedBox(height: 4),
+                    _buildShimmerBox(
+                      width: 120,
+                      height: 16,
+                      delay: index * 100 + 100,
+                    ),
+                    const SizedBox(height: 12),
+                    Row(
+                      mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                      children: [
+                        _buildShimmerBox(
+                          width: 100,
+                          height: 18,
+                          delay: index * 100 + 150,
+                        ),
+                        _buildShimmerButton(delay: index * 100 + 200),
+                      ],
+                    ),
+                  ],
+                ),
+              ),
+            ),
+          ),
+        );
+      },
+    );
+  }
+
+  Widget _buildShimmerBox({
+    required double width,
+    required double height,
+    required int delay,
+  }) {
+    return TweenAnimationBuilder(
+      duration: const Duration(milliseconds: 1500),
+      tween: Tween<double>(begin: 0, end: 1),
+      builder: (context, double value, child) {
+        return AnimatedContainer(
+          duration: Duration(milliseconds: 300 + delay),
+          width: width,
+          height: height,
+          decoration: BoxDecoration(
+            borderRadius: BorderRadius.circular(4),
+            gradient: LinearGradient(
+              begin: Alignment(-1.0 + (value * 2), 0),
+              end: Alignment(1.0 + (value * 2), 0),
+              colors: [
+                Colors.grey[300]!,
+                Colors.grey[100]!,
+                Colors.grey[300]!,
+              ],
+              stops: const [0.0, 0.5, 1.0],
+            ),
+          ),
+        );
+      },
+    );
+  }
+
+  Widget _buildShimmerButton({required int delay}) {
+    return TweenAnimationBuilder(
+      duration: Duration(milliseconds: 800 + delay),
+      tween: Tween<double>(begin: 0, end: 1),
+      builder: (context, double value, child) {
+        return Transform.scale(
+          scale: 0.8 + (0.2 * value),
+          child: Container(
+            width: 60,
+            height: 32,
+            decoration: BoxDecoration(
+              borderRadius: BorderRadius.circular(4),
+              gradient: LinearGradient(
+                begin: Alignment(-1.0 + (value * 2), 0),
+                end: Alignment(1.0 + (value * 2), 0),
+                colors: [
+                  _primaryColor.withValues(alpha: 0.3),
+                  _primaryColor.withValues(alpha: 0.1),
+                  _primaryColor.withValues(alpha: 0.3),
+                ],
+                stops: const [0.0, 0.5, 1.0],
+              ),
+            ),
+          ),
+        );
+      },
+    );
+  }
+
+  Widget _buildLoadingDot(bool isActive, int delay) {
+    return TweenAnimationBuilder(
+      duration: Duration(milliseconds: 500 + delay),
+      tween: Tween<double>(begin: 0, end: 1),
+      builder: (context, double value, child) {
+        return AnimatedContainer(
+          duration: const Duration(milliseconds: 300),
+          width: isActive ? 12 : 8,
+          height: isActive ? 12 : 8,
+          decoration: BoxDecoration(
+            shape: BoxShape.circle,
+            color: isActive 
+              ? _primaryColor.withValues(alpha: value)
+              : Colors.grey[300],
+            boxShadow: isActive ? [
+              BoxShadow(
+                color: _primaryColor.withValues(alpha: 0.3 * value),
+                spreadRadius: 2,
+                blurRadius: 4,
+              ),
+            ] : null,
+          ),
+        );
+      },
+    );
+  }
 }
 
 class PackageCard extends StatelessWidget {
@@ -605,6 +779,8 @@ class PackageCard extends StatelessWidget {
   final String phoneNumber;
   final String currentListType;
   final String selectedCategory;
+  final Color primaryColor;
+  final Color activeColor;
 
   const PackageCard({
     super.key, 
@@ -612,6 +788,8 @@ class PackageCard extends StatelessWidget {
     required this.phoneNumber,
     required this.currentListType,
     required this.selectedCategory,
+    required this.primaryColor,
+    required this.activeColor,
   });
 
   @override
@@ -621,8 +799,8 @@ class PackageCard extends StatelessWidget {
       elevation: 4,
       shape: RoundedRectangleBorder(
         borderRadius: BorderRadius.circular(8),
-        side: const BorderSide(
-          color: Color.fromARGB(255, 165, 11, 0),
+        side: BorderSide(
+          color: primaryColor,
           width: 1.0,
         ),
       ),
@@ -649,15 +827,15 @@ class PackageCard extends StatelessWidget {
               children: [
                 Text(
                   'Harga: Rp ${_formatPrice(package['price'])}',
-                  style: const TextStyle(
+                  style: TextStyle(
                     fontSize: 16,
                     fontWeight: FontWeight.bold,
-                    color: Colors.red,
+                    color: primaryColor,
                   ),
                 ),
                 ElevatedButton(
                   style: ElevatedButton.styleFrom(
-                    backgroundColor: Colors.red,
+                    backgroundColor: activeColor,
                     foregroundColor: Colors.white,
                   ),
                   onPressed: () {
@@ -699,19 +877,19 @@ class PackageCard extends StatelessWidget {
                         child: Icon(
                           Icons.shopping_cart,
                           size: 60,
-                          color: Colors.red.withValues(alpha: value),
+                          color: primaryColor.withValues(alpha: value),
                         ),
                       );
                     },
                   ),
                   const SizedBox(height: 20),
                   // Animated loading indicator
-                  const SizedBox(
+                  SizedBox(
                     width: 30,
                     height: 30,
                     child: CircularProgressIndicator(
                       strokeWidth: 3,
-                      valueColor: AlwaysStoppedAnimation<Color>(Colors.red),
+                      valueColor: AlwaysStoppedAnimation<Color>(primaryColor),
                     ),
                   ),
                   const SizedBox(height: 20),
@@ -842,6 +1020,17 @@ class PackageCard extends StatelessWidget {
       }
     }
   }
+
+  Widget _buildDot(bool isActive) {
+    return Container(
+      width: 8,
+      height: 8,
+      decoration: BoxDecoration(
+        shape: BoxShape.circle,
+        color: isActive ? primaryColor : Colors.grey[300],
+      ),
+    );
+  }
   
   String _formatPrice(dynamic price) {
     if (price == null) return '0';
@@ -856,170 +1045,4 @@ class PackageCard extends StatelessWidget {
       return price.toString();
     }
   }
-}
-
-// Add this helper method for the animated dots
-Widget _buildDot(bool isActive) {
-  return Container(
-    width: 8,
-    height: 8,
-    decoration: BoxDecoration(
-      shape: BoxShape.circle,
-      color: isActive ? Colors.red : Colors.grey[300],
-    ),
-  );
-}
-
-// Shimmer card for loading state
-Widget _buildShimmerCard(int index) {
-  return TweenAnimationBuilder(
-    duration: Duration(milliseconds: 600 + (index * 200)),
-    tween: Tween<double>(begin: 0, end: 1),
-    builder: (context, double value, child) {
-      return Transform.translate(
-        offset: Offset(0, 50 * (1 - value)),
-        child: Opacity(
-          opacity: value,
-          child: Container(
-            margin: const EdgeInsets.only(bottom: 16),
-            decoration: BoxDecoration(
-              borderRadius: BorderRadius.circular(8),
-              border: Border.all(
-                color: const Color.fromARGB(255, 165, 11, 0),
-                width: 1.0,
-              ),
-              color: Colors.white,
-            ),
-            child: Padding(
-              padding: const EdgeInsets.all(16.0),
-              child: Column(
-                crossAxisAlignment: CrossAxisAlignment.start,
-                children: [
-                  // Animated shimmer effect for title
-                  _buildShimmerBox(
-                    width: 200 + (index * 30).toDouble(),
-                    height: 20,
-                    delay: index * 100,
-                  ),
-                  const SizedBox(height: 8),
-                  // Shimmer for description
-                  _buildShimmerBox(
-                    width: 150 + (index * 20).toDouble(),
-                    height: 16,
-                    delay: index * 100 + 50,
-                  ),
-                  const SizedBox(height: 4),
-                  _buildShimmerBox(
-                    width: 120,
-                    height: 16,
-                    delay: index * 100 + 100,
-                  ),
-                  const SizedBox(height: 12),
-                  // Price and button row
-                  Row(
-                    mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                    children: [
-                      _buildShimmerBox(
-                        width: 100,
-                        height: 18,
-                        delay: index * 100 + 150,
-                      ),
-                      _buildShimmerButton(delay: index * 100 + 200),
-                    ],
-                  ),
-                ],
-              ),
-            ),
-          ),
-        ),
-      );
-    },
-  );
-}
-
-Widget _buildShimmerBox({
-  required double width,
-  required double height,
-  required int delay,
-}) {
-  return TweenAnimationBuilder(
-    duration: const Duration(milliseconds: 1500),
-    tween: Tween<double>(begin: 0, end: 1),
-    builder: (context, double value, child) {
-      return AnimatedContainer(
-        duration: Duration(milliseconds: 300 + delay),
-        width: width,
-        height: height,
-        decoration: BoxDecoration(
-          borderRadius: BorderRadius.circular(4),
-          gradient: LinearGradient(
-            begin: Alignment(-1.0 + (value * 2), 0),
-            end: Alignment(1.0 + (value * 2), 0),
-            colors: [
-              Colors.grey[300]!,
-              Colors.grey[100]!,
-              Colors.grey[300]!,
-            ],
-            stops: const [0.0, 0.5, 1.0],
-          ),
-        ),
-      );
-    },
-  );
-}
-
-Widget _buildShimmerButton({required int delay}) {
-  return TweenAnimationBuilder(
-    duration: Duration(milliseconds: 800 + delay),
-    tween: Tween<double>(begin: 0, end: 1),
-    builder: (context, double value, child) {
-      return Transform.scale(
-        scale: 0.8 + (0.2 * value),
-        child: Container(
-          width: 60,
-          height: 32,
-          decoration: BoxDecoration(
-            borderRadius: BorderRadius.circular(4),
-            gradient: LinearGradient(
-              begin: Alignment(-1.0 + (value * 2), 0),
-              end: Alignment(1.0 + (value * 2), 0),
-              colors: [
-                Colors.red[300]!,
-                Colors.red[100]!,
-                Colors.red[300]!,
-              ],
-              stops: const [0.0, 0.5, 1.0],
-            ),
-          ),
-        ),
-      );
-    },
-  );
-}
-
-Widget _buildLoadingDot(bool isActive, int delay) {
-  return TweenAnimationBuilder(
-    duration: Duration(milliseconds: 500 + delay),
-    tween: Tween<double>(begin: 0, end: 1),
-    builder: (context, double value, child) {
-      return AnimatedContainer(
-        duration: const Duration(milliseconds: 300),
-        width: isActive ? 12 : 8,
-        height: isActive ? 12 : 8,
-        decoration: BoxDecoration(
-          shape: BoxShape.circle,
-          color: isActive 
-            ? Colors.red.withValues(alpha: value)
-            : Colors.grey[300],
-          boxShadow: isActive ? [
-            BoxShadow(
-              color: Colors.red.withValues(alpha: 0.3 * value),
-              spreadRadius: 2,
-              blurRadius: 4,
-            ),
-          ] : null,
-        ),
-      );
-    },
-  );
 }

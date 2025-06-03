@@ -1,0 +1,37 @@
+{
+  "version": "0.2.0",
+  "configurations": [
+    {
+      "name": "molittleweb",
+      "request": "launch",
+      "type": "dart",
+      "deviceId": "web-server",
+      "args": [
+        "--web-hostname=localhost",
+        "--web-port=54488"
+      ]
+    },
+    {
+      "name": "molittleweb (profile mode)",
+      "request": "launch",
+      "type": "dart",
+      "flutterMode": "profile",
+      "deviceId": "web-server",
+      "args": [
+        "--web-hostname=localhost",
+        "--web-port=54488"
+      ]
+    },
+    {
+      "name": "molittleweb (release mode)",
+      "request": "launch",
+      "type": "dart",
+      "flutterMode": "release",
+      "deviceId": "web-server",
+      "args": [
+        "--web-hostname=localhost",
+        "--web-port=54488"
+      ]
+    }
+  ]
+}
