@@ -32,13 +32,12 @@ class AppConfig {
   static String get configEndpoint => '/config/$baseProviderId';
   static String get queryEndpoint => '/query/$baseProviderId';
   static String get inquiryEndpoint => '/inquiry/$baseProviderId';
-  static const String orderEndpoint = '/order';
   
   // Full API URLs (constructed from base + endpoints)
   static String get configUrl => '$baseApiUrl$configEndpoint';
   static String get queryUrl => '$baseApiUrl$queryEndpoint';
   static String get inquiryUrl => '$baseApiUrl$inquiryEndpoint';
-  static String getOrderUrl(String invId) => '$baseApiUrl$orderEndpoint/$invId';
+  static String getOrderUrl(String invId) => 'http://localhost/order/$invId';
   
   // Default App Configuration
   static const Map<String, dynamic> defaultConfig = {
