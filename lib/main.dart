@@ -3,6 +3,74 @@ import 'package:flutter/services.dart';
 import 'package:dio/dio.dart';
 import 'package:url_launcher/url_launcher.dart';
 
+// =============================================================================
+// CONFIGURATION SECTION - Change these values as needed
+// =============================================================================
+class AppConfig {
+  // API Base URLs
+  static const String baseApiUrl = 'https://known-instantly-bison.ngrok-free.app';
+
+  // Base Provider ID
+  static const String baseProviderId = 'telkomsel';
+  
+  // API Endpoints
+  static const String configEndpoint = '/config/$baseProviderId';
+  static const String queryEndpoint = '/query/$baseProviderId';
+  static const String inquiryEndpoint = '/inquiry/$baseProviderId';
+  static const String orderEndpoint = '/order';
+  
+  // Full API URLs (constructed from base + endpoints)
+  static String get configUrl => '$baseApiUrl$configEndpoint';
+  static String get queryUrl => '$baseApiUrl$queryEndpoint';
+  static String get inquiryUrl => '$baseApiUrl$inquiryEndpoint';
+  static String getOrderUrl(String invId) => '$baseApiUrl$orderEndpoint/$invId';
+  
+  // Default App Configuration
+  static const Map<String, dynamic> defaultConfig = {
+    "theme": {
+      "primaryColor": "#d0010d",
+      "backgroundColor": "#d0010d",
+      "surfaceColor": "#F5F5DC",
+      "onPrimaryColor": "#FFFFFF",
+      "onSurfaceColor": "#000000",
+      "accentColor": "#FF3A2C",
+      "errorColor": "#D32F2F",
+      "successColor": "#388E3C",
+      "activeColor": "#e73b29"
+    },
+    "buttons": [
+      {"label": "Paket Terbaik", "listType": "listTerbaik", "category": "DATA"},
+      {"label": "Paket Data", "listType": "list_product", "category": "DATA"},
+      {"label": "Roaming Terbaik", "listType": "listTerbaik", "category": "ROAMING"},
+      {"label": "Nelpon Terbaik", "listType": "listTerbaik", "category": "VOICE_SMS"},
+      {"label": "Paket Nelpon & SMS", "listType": "listVoiceSMS", "category": null},
+      {"label": "Digital & Game", "listType": "listTerbaik", "category": "DIGITAL_GAME"}
+    ]
+  };
+  
+  // App Settings
+  static const String appTitle = 'Sale All Provider';
+  static const String homePageTitle = 'Sale All Provider';
+  static const String phoneInputHint = 'Masukkan Nomor';
+  static const int maxPhoneLength = 15;
+  
+  // Default Values
+  static const String defaultCategory = 'DATA';
+  static const String defaultListType = 'listTerbaik';
+  
+  // UI Constants
+  static const Duration loadingAnimationDuration = Duration(milliseconds: 800);
+  static const Duration minimumLoadingDelay = Duration(milliseconds: 1500);
+  static const Duration snackBarDuration = Duration(seconds: 3);
+  
+  // HTTP Headers
+  static const Map<String, String> defaultHeaders = {
+    'Content-Type': 'application/json',
+    'Accept': 'application/json',
+  };
+}
+// =============================================================================
+
 void main() {
   runApp(const MyApp());
 }
@@ -13,13 +81,13 @@ class MyApp extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return MaterialApp(
-      title: 'Sale All Provider',
+      title: AppConfig.appTitle,
       debugShowCheckedModeBanner: false,
       theme: ThemeData(
         colorScheme: ColorScheme.fromSeed(seedColor: const Color.fromARGB(255, 255, 58, 44)),
         scaffoldBackgroundColor: const Color.fromARGB(255, 165, 11, 0),
       ),
-      home: const MyHomePage(title: 'Sale All Provider'),
+      home: const MyHomePage(title: AppConfig.homePageTitle),
     );
   }
 }
@@ -41,8 +109,8 @@ class _MyHomePageState extends State<MyHomePage> {
   String? _selectedSubCategory;
   bool _isLoading = false;
   String _errorMessage = '';
-  String _selectedCategory = 'DATA'; // Default category
-  String _currentListType = 'listTerbaik'; // Add this to track current list type
+  String _selectedCategory = AppConfig.defaultCategory;
+  String _currentListType = AppConfig.defaultListType;
   
   // Configuration variables
   Map<String, dynamic> _config = {};
@@ -64,18 +132,11 @@ class _MyHomePageState extends State<MyHomePage> {
   Future<void> _loadConfiguration() async {
     try {
       final dio = Dio();
-      print('Attempting to load config from: https://known-instantly-bison.ngrok-free.app/config/telkomsel');
+      print('Attempting to load config from: ${AppConfig.configUrl}');
       
-      // Use the same headers that work for /query/telkomsel
       final response = await dio.post(
-        'https://known-instantly-bison.ngrok-free.app/config/telkomsel',
-        options: Options(
-          headers: {
-            'Content-Type': 'application/json',
-            'Accept': 'application/json',
-            // Remove the ngrok header to match your working request
-          },
-        ),
+        AppConfig.configUrl,
+        options: Options(headers: AppConfig.defaultHeaders),
         data: {},
       );
       
@@ -99,7 +160,7 @@ class _MyHomePageState extends State<MyHomePage> {
           SnackBar(
             content: Text('Failed to load configuration: $e'),
             backgroundColor: Colors.orange,
-            duration: const Duration(seconds: 3),
+            duration: AppConfig.snackBarDuration,
           ),
         );
       }
@@ -109,27 +170,7 @@ class _MyHomePageState extends State<MyHomePage> {
 
   void _useDefaultConfig() {
     setState(() {
-      _config = {
-        "theme": {
-          "primaryColor": "#d0010d",
-          "backgroundColor": "#d0010d",
-          "surfaceColor": "#F5F5DC",
-          "onPrimaryColor": "#FFFFFF",
-          "onSurfaceColor": "#000000",
-          "accentColor": "#FF3A2C",
-          "errorColor": "#D32F2F",
-          "successColor": "#388E3C",
-          "activeColor": "#e73b29"
-        },
-        "buttons": [
-          {"label": "Paket Terbaik", "listType": "listTerbaik", "category": "DATA"},
-          {"label": "Paket Data", "listType": "list_product", "category": "DATA"},
-          {"label": "Roaming Terbaik", "listType": "listTerbaik", "category": "ROAMING"},
-          {"label": "Nelpon Terbaik", "listType": "listTerbaik", "category": "VOICE_SMS"},
-          {"label": "Paket Nelpon & SMS", "listType": "listVoiceSMS", "category": null},
-          {"label": "Digital & Game", "listType": "listTerbaik", "category": "DIGITAL_GAME"}
-        ]
-      };
+      _config = AppConfig.defaultConfig;
       _buttons = _config['buttons'] ?? [];
       _configLoaded = true;
     });
@@ -199,25 +240,17 @@ class _MyHomePageState extends State<MyHomePage> {
     });
     
     try {
-      // final apiUrl = 'http://localhost:4444/query/telkomsel';
-      final apiUrl = 'https://known-instantly-bison.ngrok-free.app/query/telkomsel';
       final dio = Dio();
       
       final response = await dio.post(
-        apiUrl,
-        options: Options(
-          headers: {
-            'Content-Type': 'application/json',
-            'Accept': 'application/json',
-          },
-        ),
+        AppConfig.queryUrl,
+        options: Options(headers: AppConfig.defaultHeaders),
         data: {
           'number': _phoneController.text,
-          'list': _currentListType, // Use the current list type
-          'category': _selectedCategory, // Use the selected category
+          'list': _currentListType,
+          'category': _selectedCategory,
         },
       );
-      
       
       if (response.statusCode == 200) {
         // Extract unique sub-categories
@@ -264,7 +297,6 @@ class _MyHomePageState extends State<MyHomePage> {
     });
   }
 
-  // Add this method to fetch packages for Voice_SMS category
   void _fetchPackagesWithVoiceSMS() {
     if (_phoneController.text.isNotEmpty) {
       setState(() {
@@ -278,21 +310,14 @@ class _MyHomePageState extends State<MyHomePage> {
       });
       
       try {
-        final apiUrl = 'https://known-instantly-bison.ngrok-free.app/query/telkomsel';
         final dio = Dio();
         
         dio.post(
-          apiUrl,
-          options: Options(
-            headers: {
-              'Content-Type': 'application/json',
-              'Accept': 'application/json',
-            },
-          ),
+          AppConfig.queryUrl,
+          options: Options(headers: AppConfig.defaultHeaders),
           data: {
             'number': _phoneController.text,
             'list': 'listVoiceSMS',
-            // No category parameter is sent
           },
         ).then((response) {
           if (response.statusCode == 200) {
@@ -357,7 +382,6 @@ class _MyHomePageState extends State<MyHomePage> {
     }
 
     return Scaffold(
-      // Removed appBar completely
       body: Column(
         children: [
           // Red background section
@@ -380,7 +404,7 @@ class _MyHomePageState extends State<MyHomePage> {
                       borderRadius: const BorderRadius.all(Radius.circular(20.0)),
                       borderSide: BorderSide(color: _primaryColor),
                     ),
-                    hintText: 'Masukkan Nomor',
+                    hintText: AppConfig.phoneInputHint,
                     prefixIcon: const Padding(
                       padding: EdgeInsets.only(left: 15.0),
                       child: Icon(Icons.phone),
@@ -398,8 +422,8 @@ class _MyHomePageState extends State<MyHomePage> {
                         _selectedSubCategory = null;
                         _isLoading = false;
                         _errorMessage = '';
-                        _selectedCategory = 'DATA';
-                        _currentListType = 'listTerbaik';
+                        _selectedCategory = AppConfig.defaultCategory;
+                        _currentListType = AppConfig.defaultListType;
                         });
                       },
                       padding: const EdgeInsets.all(8.0),
@@ -413,7 +437,7 @@ class _MyHomePageState extends State<MyHomePage> {
                   keyboardType: TextInputType.phone,
                   inputFormatters: [
                     FilteringTextInputFormatter.digitsOnly,
-                    LengthLimitingTextInputFormatter(15),
+                    LengthLimitingTextInputFormatter(AppConfig.maxPhoneLength),
                   ],
                 ),
                 const SizedBox(height: 10),
@@ -464,7 +488,7 @@ class _MyHomePageState extends State<MyHomePage> {
                     children: [
                       // Animated loading header
                       TweenAnimationBuilder(
-                        duration: const Duration(milliseconds: 800),
+                        duration: AppConfig.loadingAnimationDuration,
                         tween: Tween<double>(begin: 0, end: 1),
                         builder: (context, double value, child) {
                           return Opacity(
@@ -941,17 +965,11 @@ class PackageCard extends StatelessWidget {
       );
 
       final dio = Dio();
-      final apiUrl = 'https://known-instantly-bison.ngrok-free.app/inquiry/telkomsel';
       
       // Start both the API call and minimum delay simultaneously
       final apiCallFuture = dio.post(
-        apiUrl,
-        options: Options(
-          headers: {
-            'Content-Type': 'application/json',
-            'Accept': 'application/json',
-          },
-        ),
+        AppConfig.inquiryUrl,
+        options: Options(headers: AppConfig.defaultHeaders),
         data: {
           'number': phoneNumber,
           'list': currentListType,
@@ -960,7 +978,7 @@ class PackageCard extends StatelessWidget {
         },
       );
 
-      final minimumDelayFuture = Future.delayed(const Duration(milliseconds: 1500));
+      final minimumDelayFuture = Future.delayed(AppConfig.minimumLoadingDelay);
 
       // Wait for both the API call and minimum delay to complete
       final results = await Future.wait([apiCallFuture, minimumDelayFuture]);
@@ -975,7 +993,7 @@ class PackageCard extends StatelessWidget {
       if (response.statusCode == 200) {
         // Directly open Telkomsel link with inv_id
         final invId = response.data['inv_id']?.toString() ?? '';
-        final url = 'https://known-instantly-bison.ngrok-free.app/order/$invId';
+        final url = AppConfig.getOrderUrl(invId);
         
         try {
           final uri = Uri.parse(url);
