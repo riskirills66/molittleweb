@@ -11,12 +11,27 @@ class AppConfig {
   static const String baseApiUrl = 'https://known-instantly-bison.ngrok-free.app';
 
   // Base Provider ID
-  static const String baseProviderId = 'telkomsel';
+  static String get baseProviderId {
+    // Try to get the current path from the browser address bar (Flutter web only)
+    final path = Uri.base.pathSegments.isNotEmpty ? Uri.base.pathSegments.first : '';
+    switch (path.toLowerCase()) {
+      case 'telkomsel':
+        return 'telkomsel';
+      case 'xlaxis':
+        return 'xlaxis';
+      case 'indosat':
+        return 'indosat';
+      case 'tri':
+        return 'tri';
+      default:
+        return 'telkomsel';
+    }
+  }
   
   // API Endpoints
-  static const String configEndpoint = '/config/$baseProviderId';
-  static const String queryEndpoint = '/query/$baseProviderId';
-  static const String inquiryEndpoint = '/inquiry/$baseProviderId';
+  static String get configEndpoint => '/config/$baseProviderId';
+  static String get queryEndpoint => '/query/$baseProviderId';
+  static String get inquiryEndpoint => '/inquiry/$baseProviderId';
   static const String orderEndpoint = '/order';
   
   // Full API URLs (constructed from base + endpoints)
