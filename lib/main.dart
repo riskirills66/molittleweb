@@ -8,7 +8,7 @@ import 'package:url_launcher/url_launcher.dart';
 // =============================================================================
 class AppConfig {
   // API Base URLs change this conditioned to API server location
-  static const String baseApiUrl = 'http://localhost/api';
+  static const String baseApiUrl = 'https://light-moved-tetra.ngrok-free.app/api';
 
   // Base Provider ID
   static String get baseProviderId {
@@ -37,7 +37,7 @@ class AppConfig {
   static String get configUrl => '$baseApiUrl$configEndpoint';
   static String get queryUrl => '$baseApiUrl$queryEndpoint';
   static String get inquiryUrl => '$baseApiUrl$inquiryEndpoint';
-  static String getOrderUrl(String invId) => 'http://localhost/order/$invId';
+  static String getOrderUrl(String invId) => 'https://light-moved-tetra.ngrok-free.app/order/$invId';
   
   // Default App Configuration
   static const Map<String, dynamic> defaultConfig = {
@@ -605,6 +605,63 @@ class _MyHomePageState extends State<MyHomePage> {
                 Padding(
                   padding: const EdgeInsets.all(16.0),
                   child: _buildPackageGrid(),
+                ),
+              // Add this new condition for empty results
+              if (!_isLoading && _errorMessage.isEmpty && _filteredPackages.isEmpty && _phoneController.text.isNotEmpty)
+                Padding(
+                  padding: const EdgeInsets.all(16.0),
+                  child: Center(
+                    child: Column(
+                      mainAxisAlignment: MainAxisAlignment.center,
+                      children: [
+                        Icon(
+                          Icons.search_off,
+                          size: 64,
+                          color: _primaryColor.withValues(alpha: 0.5),
+                        ),
+                        const SizedBox(height: 16),
+                        Text(
+                          'Tidak ada paket ditemukan',
+                          style: TextStyle(
+                            fontSize: 18,
+                            fontWeight: FontWeight.bold,
+                            color: _primaryColor,
+                          ),
+                        ),
+                        const SizedBox(height: 8),
+                        Text(
+                          'Silakan periksa nomor telepon Anda',
+                          textAlign: TextAlign.center,
+                          style: TextStyle(
+                            fontSize: 14,
+                            color: _primaryColor.withValues(alpha: 0.7),
+                          ),
+                        ),
+                        const SizedBox(height: 16),
+                        ElevatedButton.icon(
+                          onPressed: () {
+                            setState(() {
+                              _phoneController.clear();
+                              _packages = [];
+                              _filteredPackages = [];
+                              _subCategories = [];
+                              _selectedSubCategory = null;
+                              _isLoading = false;
+                              _errorMessage = '';
+                              _selectedCategory = AppConfig.defaultCategory;
+                              _currentListType = AppConfig.defaultListType;
+                            });
+                          },
+                          icon: const Icon(Icons.refresh),
+                          label: const Text('Coba Lagi'),
+                          style: ElevatedButton.styleFrom(
+                            backgroundColor: _activeColor,
+                            foregroundColor: Colors.white,
+                          ),
+                        ),
+                      ],
+                    ),
+                  ),
                 ),
             ],
           ),
