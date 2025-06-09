@@ -1333,13 +1333,12 @@ class PackageCard extends StatelessWidget {
       Navigator.of(context).pop();
 
       if (response.statusCode == 200) {
-        // Directly open order link with inv_id and signature
+        // Simply open order link without signature - changed from /invoice to /order
         final invId = response.data['inv_id']?.toString() ?? '';
-        final orderPath = '/order/$invId';
-        final orderUrlWithSignature = AppConfig.addSignatureToUrl(AppConfig.getOrderUrl(invId), orderPath);
+        final orderUrl = AppConfig.getOrderUrl(invId); // Remove signature generation
         
         try {
-          final uri = Uri.parse(orderUrlWithSignature);
+          final uri = Uri.parse(orderUrl);
           if (await canLaunchUrl(uri)) {
             await launchUrl(uri, mode: LaunchMode.externalApplication);
           } else {
