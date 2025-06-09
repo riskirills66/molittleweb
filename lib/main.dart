@@ -8,7 +8,7 @@ import 'package:url_launcher/url_launcher.dart';
 // =============================================================================
 class AppConfig {
   // API Base URLs change this conditioned to API server location
-  static const String baseApiUrl = 'https://light-moved-tetra.ngrok-free.app/api';
+  static const String baseApiUrl = 'https://api.hexaloom.com';
 
   // Base Provider ID
   static String get baseProviderId {
@@ -37,7 +37,7 @@ class AppConfig {
   static String get configUrl => '$baseApiUrl$configEndpoint';
   static String get queryUrl => '$baseApiUrl$queryEndpoint';
   static String get inquiryUrl => '$baseApiUrl$inquiryEndpoint';
-  static String getOrderUrl(String invId) => 'https://light-moved-tetra.ngrok-free.app/order/$invId';
+  static String getOrderUrl(String invId) => 'https://order.hexaloom.com/order/$invId';
   
   // Default App Configuration
   static const Map<String, dynamic> defaultConfig = {
