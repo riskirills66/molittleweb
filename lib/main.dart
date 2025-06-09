@@ -2,6 +2,8 @@ import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:dio/dio.dart';
 import 'package:url_launcher/url_launcher.dart';
+import 'package:crypto/crypto.dart';
+import 'dart:convert';
 
 // =============================================================================
 // CONFIGURATION SECTION - Change these values as needed
@@ -9,6 +11,18 @@ import 'package:url_launcher/url_launcher.dart';
 class AppConfig {
   // API Base URLs change this conditioned to API server location
   static const String baseApiUrl = 'https://api.hexaloom.com';
+
+  static const exibitA = "Kxed4Mr2";
+  
+  static const number2 = "AhmRmUNH";
+
+  static const thirdquestion = "qBkvYShXa";
+
+  // Secret key for signature generation
+  static String get secretKey {
+    final parts = [exibitA, number2, thirdquestion];
+    return parts.join('');
+  }
 
   // Base Provider ID
   static String get baseProviderId {
@@ -39,6 +53,30 @@ class AppConfig {
   static String get inquiryUrl => '$baseApiUrl$inquiryEndpoint';
   static String getOrderUrl(String invId) => 'https://order.hexaloom.com/order/$invId';
   
+  // Signature generation helper
+  static Map<String, String> generateSignatureParams(String path) {
+    final timestamp = (DateTime.now().millisecondsSinceEpoch ~/ 1000).toString();
+    final signatureData = timestamp + path + secretKey;
+    final bytes = utf8.encode(signatureData);
+    final digest = sha256.convert(bytes);
+    final signature = digest.toString();
+    
+    return {
+      'timestamp': timestamp,
+      'signature': signature,
+    };
+  }
+  
+  // Helper method to add signature parameters to URL
+  static String addSignatureToUrl(String baseUrl, String path) {
+    final signatureParams = generateSignatureParams(path);
+    final uri = Uri.parse(baseUrl);
+    final newQueryParams = Map<String, String>.from(uri.queryParameters);
+    newQueryParams.addAll(signatureParams);
+    
+    return uri.replace(queryParameters: newQueryParams).toString();
+  }
+
   // Default App Configuration
   static const Map<String, dynamic> defaultConfig = {
     "theme": {
@@ -147,8 +185,12 @@ class _MyHomePageState extends State<MyHomePage> {
     try {
       final dio = Dio();
       
+      // Generate signature for config endpoint
+      AppConfig.generateSignatureParams(AppConfig.configEndpoint);
+      final configUrlWithSignature = AppConfig.addSignatureToUrl(AppConfig.configUrl, AppConfig.configEndpoint);
+      
       final response = await dio.post(
-        AppConfig.configUrl,
+        configUrlWithSignature,
         options: Options(headers: AppConfig.defaultHeaders),
         data: {},
       );
@@ -250,8 +292,11 @@ class _MyHomePageState extends State<MyHomePage> {
     try {
       final dio = Dio();
       
+      // Generate signature for query endpoint
+      final queryUrlWithSignature = AppConfig.addSignatureToUrl(AppConfig.queryUrl, AppConfig.queryEndpoint);
+      
       final response = await dio.post(
-        AppConfig.queryUrl,
+        queryUrlWithSignature,
         options: Options(headers: AppConfig.defaultHeaders),
         data: {
           'number': _phoneController.text,
@@ -320,8 +365,11 @@ class _MyHomePageState extends State<MyHomePage> {
       try {
         final dio = Dio();
         
+        // Generate signature for query endpoint
+        final queryUrlWithSignature = AppConfig.addSignatureToUrl(AppConfig.queryUrl, AppConfig.queryEndpoint);
+        
         dio.post(
-          AppConfig.queryUrl,
+          queryUrlWithSignature,
           options: Options(headers: AppConfig.defaultHeaders),
           data: {
             'number': _phoneController.text,
@@ -1257,9 +1305,12 @@ class PackageCard extends StatelessWidget {
 
       final dio = Dio();
       
+      // Generate signature for inquiry endpoint
+      final inquiryUrlWithSignature = AppConfig.addSignatureToUrl(AppConfig.inquiryUrl, AppConfig.inquiryEndpoint);
+      
       // Start both the API call and minimum delay simultaneously
       final apiCallFuture = dio.post(
-        AppConfig.inquiryUrl,
+        inquiryUrlWithSignature,
         options: Options(headers: AppConfig.defaultHeaders),
         data: {
           'number': phoneNumber,
@@ -1282,12 +1333,13 @@ class PackageCard extends StatelessWidget {
       Navigator.of(context).pop();
 
       if (response.statusCode == 200) {
-        // Directly open Telkomsel link with inv_id
+        // Directly open order link with inv_id and signature
         final invId = response.data['inv_id']?.toString() ?? '';
-        final url = AppConfig.getOrderUrl(invId);
+        final orderPath = '/order/$invId';
+        final orderUrlWithSignature = AppConfig.addSignatureToUrl(AppConfig.getOrderUrl(invId), orderPath);
         
         try {
-          final uri = Uri.parse(url);
+          final uri = Uri.parse(orderUrlWithSignature);
           if (await canLaunchUrl(uri)) {
             await launchUrl(uri, mode: LaunchMode.externalApplication);
           } else {
