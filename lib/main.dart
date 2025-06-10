@@ -37,6 +37,8 @@ class AppConfig {
         return 'indosat';
       case 'tri':
         return 'tri';
+      case 'byu':
+        return 'byu';
       default:
         return 'telkomsel';
     }
