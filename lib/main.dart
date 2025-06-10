@@ -171,6 +171,9 @@ class _MyHomePageState extends State<MyHomePage> {
   List<dynamic> _buttons = [];
   bool _configLoaded = false;
   
+  // Add flag to track if user has made any selection
+  bool _hasUserSelection = false;
+  
   @override
   void initState() {
     super.initState();
@@ -243,6 +246,11 @@ class _MyHomePageState extends State<MyHomePage> {
   Color get _activeColor => _getColorFromHex(_config['theme']?['activeColor'] ?? '#e73b29');
 
   bool _isButtonActive(dynamic button) {
+    // Don't show any button as active until user makes a selection
+    if (!_hasUserSelection) {
+      return false;
+    }
+    
     final buttonListType = button['listType'];
     final buttonCategory = button['category'];
     
@@ -265,6 +273,7 @@ class _MyHomePageState extends State<MyHomePage> {
     final buttonCategory = button['category'];
 
     setState(() {
+      _hasUserSelection = true; // Set flag when user makes selection
       _currentListType = buttonListType;
       if (buttonCategory != null) {
         _selectedCategory = buttonCategory;
