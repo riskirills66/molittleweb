@@ -254,10 +254,12 @@ class _MyHomePageState extends State<MyHomePage> {
     final buttonListType = button['listType'];
     final buttonCategory = button['category'];
     
-    if (buttonCategory == null && buttonListType == 'listVoiceSMS') {
-      return _currentListType == 'listVoiceSMS';
+    // Special handling for buttons with null category
+    if (buttonCategory == null) {
+      return _currentListType == buttonListType;
     }
     
+    // For buttons with specific categories
     return _currentListType == buttonListType && _selectedCategory == buttonCategory;
   }
 
